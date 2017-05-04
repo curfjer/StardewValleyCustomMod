@@ -1,0 +1,9 @@
+﻿BuildableGameLocation needed
+	Checks to see if building is present so you can build there or not
+	Need to check for custombuildings and buildings
+	Can add custom building to the buildings as a "fake" building so that the 
+	original buildings wont be placeable on custom buildings
+	Dont do that step until after testing to see if you can in fact build default buildings on
+	top of custom buildings
+
+Add, move, demolish is the same, need to do twice, once for building list and once for custom building list

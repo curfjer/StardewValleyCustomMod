@@ -1,0 +1,13 @@
+﻿{
+    "Name": "StardewValleyCustomMod",
+    "Author": "GlassArrow",
+    "Version": {
+        "MajorVersion": 1,
+        "MinorVersion": 0,
+        "PatchVersion": 0,
+        "Build": ""
+    },
+    "Description": "Just testing stuf",
+    "UniqueID": "GlassArrow.<StardewValleyCustomMod",
+    "EntryDll": "StardewValleyCustomMod.dll"
+}
