@@ -15,40 +15,46 @@ namespace StardewValleyCustomMod.CustomBlueprints
 {
     public class CustomBuildingBlueprint
     {
-        public List<string> namesOfOkayBuildingLocations = new List<string>();
-        public Dictionary<int, int> itemsRequired = new Dictionary<int, int>();
-        public string name;
-        public int woodRequired;
-        public int stoneRequired;
-        public int copperRequired;
-        public int IronRequired;
-        public int GoldRequired;
-        public int IridiumRequired;
-        public int tilesWidth;
-        public int tilesHeight;
-        public int maxOccupants;
-        public int moneyRequired;
-        public Point humanDoor;
-        public Point animalDoor;
-        public string mapToWarpTo;
-        public string description;
-        public string blueprintType;
-        public string nameOfBuildingToUpgrade;
-        public string actionBehavior;
-        public Texture2D texture;
-        public Rectangle sourceRectForMenuView;
-        public bool canBuildOnCurrentMap;
-        public bool magical;
-        public IMonitor monitor;
+        private List<string> namesOfOkayBuildingLocations = new List<string>();
+        private Dictionary<int, int> itemsRequired = new Dictionary<int, int>();
+        public string name { get; set; } = "";
+        public int woodRequired { get; set; } = 0;
+        public int stoneRequired { get; set; } = 0;
+        public int copperRequired { get; set; } = 0;
+        public int IronRequired { get; set; } = 0;
+        public int GoldRequired { get; set; } = 0;
+        public int IridiumRequired { get; set; } = 0;
+        public int tilesWidth { get; set; } = 0;
+        public int tilesHeight { get; set; } = 0;
+        public int maxOccupants { get; set; } = -1;
+        public int moneyRequired { get; set; } = 0;
+        public Point humanDoor { get; set; } = new Point(-1, -1);
+        public Point animalDoor { get; set; } = new Point(-1, -1);
+        public string mapToWarpTo { get; set; } = null;
+        public string description { get; set; } = "Default";
+        public string blueprintType { get; set; } = "Buildings";
+        public string nameOfBuildingToUpgrade { get; set; } = "none";
+        public string actionBehavior { get; set; } = "Farm"; // ???
+        private Texture2D texture;
+        private Rectangle sourceRectForMenuView;
+        public int sourceRectHeight { get; set; } = 0;
+        public int sourceRectWidth { get; set; } = 0;
+        private bool canBuildOnCurrentMap;
+        public bool magical { get; set; } = false;
+        private IMonitor monitor;
         private LocalizedContentManager content;
+
+        public CustomBuildingBlueprint()
+        {
+        }
 
         public CustomBuildingBlueprint(string name, IMonitor monitor)
         {
             this.monitor = monitor;
             this.content = new LocalizedContentManager(Game1.content.ServiceProvider, "Mods\\StardewValleyCustomMod\\CustomBuildings");
             this.name = name;
-            this.monitor.Log($"Filepath for Game1 is:{Game1.content.RootDirectory}"); // DEBUG REMOVE
-            this.monitor.Log($"Filepath for mod is:{this.content.RootDirectory}"); // DEBUG REMOVE
+            StardewValleyCustomMod.Logger.Log($"Filepath for Game1 is:{Game1.content.RootDirectory}"); // DEBUG REMOVE
+            StardewValleyCustomMod.Logger.Log($"Filepath for mod is:{this.content.RootDirectory}"); // DEBUG REMOVE
             if (name.Equals("Info Tool"))
             {
                 this.texture = Game1.content.Load<Texture2D>("LooseSprites\\Cursors");
@@ -58,19 +64,19 @@ namespace StardewValleyCustomMod.CustomBlueprints
             else
             {
                 Dictionary<string, string> dictionary = content.Load<Dictionary<string, string>>("Blueprints");
-                this.monitor.Log("Obtained blueprint list!"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log("Obtained blueprint list!"); // DEBUG REMOVE
                 string str1 = (string)null;
                 string key = name;
                 // ISSUE: explicit reference operation
                 // ISSUE: variable of a reference type
                 string local = @str1;
-                this.monitor.Log($"str1 Local: {local}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"str1 Local: {local}"); // DEBUG REMOVE
                 dictionary.TryGetValue(key, out local);
-                this.monitor.Log($"Dict Local: {local}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"Dict Local: {local}"); // DEBUG REMOVE
                 str1 = local; //Is this redundant? Why was str1 and local needed in original code?
                 if (str1 == null)
                     return;
-                this.monitor.Log("Parsing File!"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log("Parsing File!"); // DEBUG REMOVE
                 string[] strArray1 = str1.Split('/');
                 if (strArray1[0].Equals("animal"))
                 {
@@ -96,13 +102,13 @@ namespace StardewValleyCustomMod.CustomBlueprints
                     try
                     {
                         this.texture = content.Load<Texture2D>(name);
-                        this.monitor.Log($"The building blueprint for {name} loaded with texture!"); //DEBUG REMOVE
+                        StardewValleyCustomMod.Logger.Log($"The building blueprint for {name} loaded with texture!"); //DEBUG REMOVE
                     }
                     catch (Exception ex)
                     {
-                        this.monitor.Log($"The building blueprint for {name} loaded with no texture!");
+                        StardewValleyCustomMod.Logger.Log($"The building blueprint for {name} loaded with no texture!");
                     }
-                    this.monitor.Log("Parsing Building!"); // DEBUG REMOVE
+                    StardewValleyCustomMod.Logger.Log("Parsing Building!"); // DEBUG REMOVE
                     string[] strArray2 = strArray1[0].Split(' ');
                     int index = 0;
                     while (index < strArray2.Length)
@@ -192,9 +198,12 @@ namespace StardewValleyCustomMod.CustomBlueprints
         public BluePrint convertCustomBlueprintToBluePrint()
         {
             BluePrint blueprint = new BluePrint("Shed");
+            this.LoadCustomBuildingBlueprint();
 
-            this.monitor.Log($"The building blueprint for {this.name} loaded with {blueprint.texture.ToString()} and {this.texture.ToString()}!");
+            StardewValleyCustomMod.Logger.Log($"The building blueprint for {this.name} loaded with {blueprint.texture.ToString()} and {this.texture.ToString()}!");
 
+            if (StardewValleyCustomMod.config.debug)
+                this.CustomBlueprintValuesDebug();
 
             blueprint.namesOfOkayBuildingLocations = this.namesOfOkayBuildingLocations;
             blueprint.itemsRequired = this.itemsRequired;
@@ -218,10 +227,52 @@ namespace StardewValleyCustomMod.CustomBlueprints
             blueprint.actionBehavior = this.actionBehavior;
             blueprint.texture = this.texture;
             blueprint.sourceRectForMenuView = this.sourceRectForMenuView;
+            //blueprint.sourceRectForMenuView = new Rectangle(0, 0, this.sourceRectHeight, this.sourceRectWidth); ;
             blueprint.canBuildOnCurrentMap = this.canBuildOnCurrentMap;
             blueprint.magical = this.magical;
 
             return blueprint;
-    }
+        }
+
+        public void LoadCustomBuildingBlueprint()
+        {
+            this.content = new LocalizedContentManager(Game1.content.ServiceProvider, "Mods\\StardewValleyCustomMod\\CustomBuildings");
+            try
+            {
+                this.texture = content.Load<Texture2D>(this.name);
+                StardewValleyCustomMod.Logger.Log($"The building blueprint for {this.name} loaded with texture!"); //DEBUG REMOVE
+            }
+            catch (Exception ex)
+            {
+                StardewValleyCustomMod.Logger.Log($"The building blueprint for {this.name} loaded with no texture!");
+            }
+            this.sourceRectForMenuView = new Rectangle(0, 0, this.sourceRectHeight, this.sourceRectWidth);
+
+            if (this.woodRequired > 0)
+                this.itemsRequired.Add(388, this.woodRequired);
+            if (this.stoneRequired > 0)
+                this.itemsRequired.Add(390, this.stoneRequired);
+        }
+
+        public void CustomBlueprintValuesDebug()
+        {
+            StardewValleyCustomMod.Logger.Log($"Name: {this.name}");
+            StardewValleyCustomMod.Logger.Log($"Wood Required: {this.woodRequired}");
+            StardewValleyCustomMod.Logger.Log($"Stone Required: {this.stoneRequired}");
+            StardewValleyCustomMod.Logger.Log($"Copper Required: {this.copperRequired}");
+            StardewValleyCustomMod.Logger.Log($"Iron Required: {this.IronRequired}");
+            StardewValleyCustomMod.Logger.Log($"Gold Required: {this.GoldRequired}");
+            StardewValleyCustomMod.Logger.Log($"Iridium Required: {this.IridiumRequired}");
+            StardewValleyCustomMod.Logger.Log($"Tiles Width: {this.tilesWidth}");
+            StardewValleyCustomMod.Logger.Log($"Tiles Height: {this.tilesHeight}");
+            StardewValleyCustomMod.Logger.Log($"Max Occupants: {this.maxOccupants}");
+            StardewValleyCustomMod.Logger.Log($"Money Required: {this.moneyRequired}");
+            StardewValleyCustomMod.Logger.Log($"Map To Warp To: {this.mapToWarpTo}");
+            StardewValleyCustomMod.Logger.Log($"Description: {this.description}");
+            StardewValleyCustomMod.Logger.Log($"Blueprint Type: {this.blueprintType}");
+            StardewValleyCustomMod.Logger.Log($"Name of Building to Upgrade: {this.nameOfBuildingToUpgrade}");
+            StardewValleyCustomMod.Logger.Log($"Action Behavior: {this.actionBehavior}");
+            StardewValleyCustomMod.Logger.Log($"Magical: {this.magical}");
+        }
     }
 }

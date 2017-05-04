@@ -13,13 +13,14 @@ using Entoarox.Framework.Events;
 using xTile.Dimensions;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
+using StardewValleyCustomMod.CustomBlueprints;
 
 namespace StardewValleyCustomMod
 {
     class StardewValleyCustomMod : Mod
     {
         public bool shopReplaced;
-        public Config config;
+        internal static Config config;
         internal static IMonitor Logger;
         internal static IContentRegistry ContentRegistry = EntoFramework.GetContentRegistry();
         internal static string ModPath;
@@ -27,17 +28,26 @@ namespace StardewValleyCustomMod
         public override void Entry(IModHelper helper)
         {
             ModPath = helper.DirectoryPath;
-            MenuEvents.MenuChanged += OnMenuChanged;
-            MenuEvents.MenuClosed += OnMenuClosed;
+            Logger = Monitor;
+
+            Logger.Log("Loading Config...");
             config = helper.ReadConfig<Config>();
             if (config == null)
             {
+                Logger.Log("No config file found. Creating a config file.");
                 config = new Config();
                 helper.WriteConfig<Config>(config);
             }
-            Logger = Monitor;
+
+            foreach(CustomBuildingBlueprint blu in config.blueprintList)
+                Logger.Log($"{blu.name} added.");
+            
             LocationEvents.CurrentLocationChanged += this.OnMapLoad;
             MoreEvents.WorldReady += MoreEvents_WorldReady;
+            GameEvents.GameLoaded += MoreEvents_WorldReady;
+
+            MenuEvents.MenuChanged += OnMenuChanged;
+            MenuEvents.MenuClosed += OnMenuClosed;
         }
 
         public void OnMenuChanged(object sender, EventArgs e)
@@ -73,7 +83,7 @@ namespace StardewValleyCustomMod
             //AdvancedLocationLoaderMod.Logger.Log(location.ToString(), LogLevel.Trace);
             string wineryPath = Path.Combine(ModPath, "CustomBuildings");
             wineryPath = Path.Combine(wineryPath, "BuildingInterior");
-            wineryPath = Path.Combine(wineryPath, "Winery");
+            wineryPath = Path.Combine(wineryPath, "WineryInterior");
             Logger.Log("Winery File Path: " + wineryPath);
             try
             {
@@ -107,7 +117,7 @@ namespace StardewValleyCustomMod
                 }*/
                 //loc.isOutdoors = location.Outdoor;
                 //loc.isFarm = location.Farmable;
-                loc = new StardewValley.Locations.Cellar(map, "Winery");
+                loc = new StardewValley.Locations.Cellar(map, "WineryInterior");
                 loc.objects = new SerializableDictionary<Microsoft.Xna.Framework.Vector2, StardewValley.Object>();
                 loc.isOutdoors = false;
                 loc.isFarm = false;
@@ -143,6 +153,20 @@ namespace StardewValleyCustomMod
 
     public class Config
     {
+        public bool debug { get; set; } = false;
+        public string shopNPCName { get; set; }
+        public CustomBuildingBlueprint[] blueprintList { get; set; }
+
+        public Config()
+        {
+            shopNPCName = "Jackie";
+            blueprintList = new CustomBuildingBlueprint[] { new CustomBuildingBlueprint() };
+        }
+    }
+
+    /*
+    public class Config
+    {
         public bool keepDefaultsIfNotOverwritten { get; set; }
         public bool removeTopazRing { get; set; }
         public ItemForSale[] weaponList { get; set; }
@@ -172,5 +196,5 @@ namespace StardewValleyCustomMod
         public string[] requiredKillTypes { get; set; } = new string[] { "" };
         public bool requiresAllDonations { get; set; } = false;
         public int[] donatedItems { get; set; } = new int[] { -1 };
-    }
+    }*/
 }

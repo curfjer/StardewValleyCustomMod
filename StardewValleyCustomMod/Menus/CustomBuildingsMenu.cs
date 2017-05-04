@@ -66,7 +66,9 @@ namespace StardewValleyCustomMod.Menus
         //Point humanDoor, Point animalDoor, GameLocation indoors, Texture2D texture, bool magical, long owner
         private Building GetBuildingFromBlueprint(BluePrint blueprint)
         {
+            // Dummy location
             GameLocation blueprintIndoorLocation = (GameLocation)new Shed(Game1.content.Load<Map>("Maps\\" + "Shed"), "Shed");
+
             if (blueprint.mapToWarpTo != null && blueprint.mapToWarpTo.Length > 0 && !blueprint.mapToWarpTo.Equals("null"))
             {
                 this.monitor.Log("mapToWarpTo is not null!"); // DEBUG REMOVE
@@ -103,13 +105,22 @@ namespace StardewValleyCustomMod.Menus
             this.shopLocation = Game1.currentLocation;
             this.content = new LocalizedContentManager(Game1.content.ServiceProvider, "Mods\\StardewValleyCustomMod\\CustomBuildings");
             this.blueprints = new List<BluePrint>();
+            StardewValleyCustomMod.Logger.Log("Loading Crafting Menu...");
+            foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.config.blueprintList)
+            {
+                this.blueprints.Add(blu.convertCustomBlueprintToBluePrint());
+                if (StardewValleyCustomMod.config.debug)
+                    StardewValleyCustomMod.Logger.Log($"{blu.name} custom blueprint has been converted.");
+            }
+
+            /*
             this.blueprints.Add((new CustomBuildingBlueprint("Well", this.monitor)).convertCustomBlueprintToBluePrint());
             this.blueprints.Add((new CustomBuildingBlueprint("Shed", this.monitor)).convertCustomBlueprintToBluePrint());
             this.blueprints.Add((new CustomBuildingBlueprint("Winery", this.monitor)).convertCustomBlueprintToBluePrint());
             //this.blueprints.Add(new BluePrint("Winery")); // Make upgrade for shed?
             this.monitor.Log($"blueprints[0]: {blueprints[0].name}"); // DEBUG REMOVE
             this.monitor.Log($"blueprints[1]: {blueprints[1].name}"); // DEBUG REMOVE
-            this.monitor.Log($"blueprints[2]: {blueprints[2].name}"); // DEBUG REMOVE
+            this.monitor.Log($"blueprints[2]: {blueprints[2].name}"); // DEBUG REMOVE*/
             this.magicalConstruction = false; //REMOVE
             this.setNewActiveBlueprint();
         }
