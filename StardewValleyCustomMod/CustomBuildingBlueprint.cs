@@ -33,7 +33,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
         public string mapToWarpTo { get; set; } = null;
         public string description { get; set; } = "Default";
         public string blueprintType { get; set; } = "Buildings";
-        public string nameOfBuildingToUpgrade { get; set; } = "none";
+        public string nameOfBuildingToUpgrade { get; set; } = "";
         public string actionBehavior { get; set; } = "Farm"; // ???
         private Texture2D texture;
         private Rectangle sourceRectForMenuView;

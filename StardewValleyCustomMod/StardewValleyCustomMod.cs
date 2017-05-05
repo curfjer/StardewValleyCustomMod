@@ -48,6 +48,20 @@ namespace StardewValleyCustomMod
 
             MenuEvents.MenuChanged += OnMenuChanged;
             MenuEvents.MenuClosed += OnMenuClosed;
+
+            ControlEvents.KeyPressed += this.ReceiveKeyPress;
+        }
+
+        private void ReceiveKeyPress(object sender, EventArgsKeyPressed e)
+        {
+            if (e.KeyPressed.ToString() == "P")
+            {
+                Logger.Log("Opening MENU");
+                if (Game1.activeClickableMenu is null)
+                {
+                    Game1.activeClickableMenu = (IClickableMenu)new CustomBuildingsMenu();
+                }
+            }
         }
 
         public void OnMenuChanged(object sender, EventArgs e)
@@ -60,7 +74,7 @@ namespace StardewValleyCustomMod
                     shopReplaced = true;
                     this.Monitor.Log("Displaying Updated Shop Inventory");
                     //Game1.activeClickableMenu = new ShopMenu(shopList, 0, "Marlon");
-                    Game1.activeClickableMenu = (IClickableMenu)new CustomBuildingsMenu(this.Monitor);
+                    Game1.activeClickableMenu = (IClickableMenu)new CustomBuildingsMenu();
                 }
             }
         }

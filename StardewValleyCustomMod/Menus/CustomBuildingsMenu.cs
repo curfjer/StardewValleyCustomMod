@@ -49,7 +49,6 @@ namespace StardewValleyCustomMod.Menus
         private bool demolishing;
         private bool moving;
         private bool magicalConstruction;
-        private IMonitor monitor;
         private BluePrint currentBlueprint;
         private LocalizedContentManager content;
         private GameLocation shopLocation;
@@ -61,7 +60,7 @@ namespace StardewValleyCustomMod.Menus
                 return this.blueprints[this.currentBlueprintIndex];
             }
         }
-        
+
         //string buildingType, string nameOfIndoors, int tileX, int tileY, int tilesWide, int tilesTall, 
         //Point humanDoor, Point animalDoor, GameLocation indoors, Texture2D texture, bool magical, long owner
         private Building GetBuildingFromBlueprint(BluePrint blueprint)
@@ -71,20 +70,25 @@ namespace StardewValleyCustomMod.Menus
 
             if (blueprint.mapToWarpTo != null && blueprint.mapToWarpTo.Length > 0 && !blueprint.mapToWarpTo.Equals("null"))
             {
-                this.monitor.Log("mapToWarpTo is not null!"); // DEBUG REMOVE
+                if (StardewValleyCustomMod.config.debug)
+                    StardewValleyCustomMod.Logger.Log("mapToWarpTo is not null!"); // DEBUG REMOVE
                 blueprintIndoorLocation = this.GetGameLocationFromBlueprint(blueprint);
             }
-            this.monitor.Log($"Name: {blueprint.name}"); // DEBUG REMOVE
-            this.monitor.Log($"mapToWarpTo: {blueprint.mapToWarpTo}"); // DEBUG REMOVE
-            this.monitor.Log($"X: {(int) Vector2.Zero.X}"); // DEBUG REMOVE
-            this.monitor.Log($"Y: {(int) Vector2.Zero.Y}"); // DEBUG REMOVE
-            this.monitor.Log($"tilesWidth: {blueprint.tilesWidth}"); // DEBUG REMOVE
-            this.monitor.Log($"tilesHeight: {blueprint.tilesHeight}"); // DEBUG REMOVE
-            this.monitor.Log($"humanDoor: {blueprint.humanDoor}"); // DEBUG REMOVE
-            this.monitor.Log($"animalDoor: {blueprint.animalDoor}"); // DEBUG REMOVE
-            this.monitor.Log($"blueprintIndoorLocation: {blueprintIndoorLocation}"); // DEBUG REMOVE
-            this.monitor.Log($"texture: {blueprint.texture}"); // DEBUG REMOVE
-            this.monitor.Log($"magical: {blueprint.magical}"); // DEBUG REMOVE
+
+            if (StardewValleyCustomMod.config.debug)
+            {
+                StardewValleyCustomMod.Logger.Log($"Name: {blueprint.name}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"mapToWarpTo: {blueprint.mapToWarpTo}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"X: {(int)Vector2.Zero.X}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"Y: {(int)Vector2.Zero.Y}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"tilesWidth: {blueprint.tilesWidth}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"tilesHeight: {blueprint.tilesHeight}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"humanDoor: {blueprint.humanDoor}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"animalDoor: {blueprint.animalDoor}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"blueprintIndoorLocation: {blueprintIndoorLocation}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"texture: {blueprint.texture}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"magical: {blueprint.magical}"); // DEBUG REMOVE
+            }
             return new Building(blueprint.name, blueprint.mapToWarpTo, (int) Vector2.Zero.X, (int) Vector2.Zero.Y, 
                 blueprint.tilesWidth, blueprint.tilesHeight, blueprint.humanDoor, blueprint.animalDoor, 
                 blueprintIndoorLocation, blueprint.texture, blueprint.magical, 0);
@@ -92,16 +96,15 @@ namespace StardewValleyCustomMod.Menus
 
         private GameLocation GetGameLocationFromBlueprint(BluePrint blueprint)
         {
-            this.monitor.Log($"Getting location for: {blueprint.name}"); // DEBUG REMOVE
-            this.monitor.Log($"Location is: {blueprint.mapToWarpTo}"); // DEBUG REMOVE
+            StardewValleyCustomMod.Logger.Log($"Getting location for: {blueprint.name}"); // DEBUG REMOVE
+            StardewValleyCustomMod.Logger.Log($"Location is: {blueprint.mapToWarpTo}"); // DEBUG REMOVE
             return new GameLocation(this.content.Load<Map>("BuildingInterior\\" + blueprint.mapToWarpTo), blueprint.name);
         }
 
-        public CustomBuildingsMenu(IMonitor monitor)
+        public CustomBuildingsMenu()
         {
             Game1.player.forceCanMove();
             this.resetBounds();
-            this.monitor = monitor;
             this.shopLocation = Game1.currentLocation;
             this.content = new LocalizedContentManager(Game1.content.ServiceProvider, "Mods\\StardewValleyCustomMod\\CustomBuildings");
             this.blueprints = new List<BluePrint>();
@@ -154,7 +157,7 @@ namespace StardewValleyCustomMod.Menus
                 (Building)new Barn(this.blueprints[this.currentBlueprintIndex], Vector2.Zero)) : 
                 (Building)new Coop(this.blueprints[this.currentBlueprintIndex], Vector2.Zero); 
             // !a ? ( !b ? ( !c ? ( !d ? e : f ) : g ) : h ) : i );*/
-            this.monitor.Log($"CurrentBlueprintIndex: {this.currentBlueprintIndex}"); // DEBUG REMOVE
+            StardewValleyCustomMod.Logger.Log($"CurrentBlueprintIndex: {this.currentBlueprintIndex}"); // DEBUG REMOVE
             //this.currentBuilding = new Building(this.blueprints[this.currentBlueprintIndex], Vector2.Zero);
             this.currentBuilding = this.GetBuildingFromBlueprint(this.CurrentBlueprint);
             this.price = this.blueprints[this.currentBlueprintIndex].moneyRequired;
@@ -163,7 +166,7 @@ namespace StardewValleyCustomMod.Menus
                 this.ingredients.Add((Item)new StardewValley.Object(keyValuePair.Key, keyValuePair.Value, false, -1, 0));
             this.buildingDescription = this.blueprints[this.currentBlueprintIndex].description;
             this.buildingName = this.blueprints[this.currentBlueprintIndex].name;
-            this.monitor.Log($"CurrentBuildingName: {this.buildingName}"); // DEBUG REMOVE
+            StardewValleyCustomMod.Logger.Log($"CurrentBuildingName: {this.buildingName}"); // DEBUG REMOVE
         }
 
         public override void performHoverAction(int x, int y)
@@ -410,7 +413,7 @@ namespace StardewValleyCustomMod.Menus
             }
             else if (this.tryToBuild())
             {
-                this.monitor.Log($"Successfully starting building the {currentBuilding.buildingType}"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log($"Successfully starting building the {currentBuilding.buildingType}"); // DEBUG REMOVE
                 this.CurrentBlueprint.consumeResources();
                 DelayedAction.fadeAfterDelay(new Game1.afterFadeFunction(this.returnToCarpentryMenuAfterSuccessfulBuild), 2000);
                 this.freeze = true;
@@ -448,13 +451,13 @@ namespace StardewValleyCustomMod.Menus
 
         public void returnToCarpentryMenuAfterSuccessfulBuild()
         {
-            this.monitor.Log("Returning to Carpentry Menu"); // DEBUG REMOVE
+            StardewValleyCustomMod.Logger.Log("Returning to Carpentry Menu"); // DEBUG REMOVE
             Game1.currentLocation.cleanupBeforePlayerExit();
             //Game1.currentLocation = Game1.getLocationFromName(this.magicalConstruction ? "WizardHouse" : "ScienceHouse");
             Game1.currentLocation = this.shopLocation;
             Game1.currentLocation.resetForPlayerEntry();
             Game1.globalFadeToClear(new Game1.afterFadeFunction(this.robinConstructionMessage), 0.02f);
-            this.monitor.Log($"Fading to {this.shopLocation}"); // DEBUG REMOVE
+            StardewValleyCustomMod.Logger.Log($"Fading to {this.shopLocation}"); // DEBUG REMOVE
             Game1.displayHUD = true;
             Game1.viewportFreeze = false;
             Game1.viewport.Location = new Location(5 * Game1.tileSize, 24 * Game1.tileSize);
