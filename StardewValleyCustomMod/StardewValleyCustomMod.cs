@@ -1,18 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
+
+using StardewValley;
+using StardewValley.Menus;
+
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
-using StardewValley;
-using StardewValley.Locations;
-using StardewValley.Menus;
-using StardewValley.Objects;
-using StardewValley.Tools;
-using StardewValleyCustomMod.Menus;
+
 using Entoarox.Framework;
 using Entoarox.Framework.Events;
-using xTile.Dimensions;
-using Microsoft.Xna.Framework.Graphics;
-using System.IO;
+
+using StardewValleyCustomMod.Menus;
 using StardewValleyCustomMod.CustomBlueprints;
 
 namespace StardewValleyCustomMod
@@ -20,26 +17,17 @@ namespace StardewValleyCustomMod
     class StardewValleyCustomMod : Mod
     {
         public bool shopReplaced;
-        internal static Config config;
+        internal static Config Config;
         internal static IMonitor Logger;
         internal static IContentRegistry ContentRegistry = EntoFramework.GetContentRegistry();
         internal static string ModPath;
+        internal static DebugLogger Debug;
 
         public override void Entry(IModHelper helper)
         {
-            ModPath = helper.DirectoryPath;
-            Logger = Monitor;
+            Initialize(helper);
 
-            Logger.Log("Loading Config...");
-            config = helper.ReadConfig<Config>();
-            if (config == null)
-            {
-                Logger.Log("No config file found. Creating a config file.");
-                config = new Config();
-                helper.WriteConfig<Config>(config);
-            }
-
-            foreach(CustomBuildingBlueprint blu in config.blueprintList)
+            foreach(CustomBuildingBlueprint blu in Config.blueprintList)
                 Logger.Log($"{blu.name} added.");
             
             LocationEvents.CurrentLocationChanged += this.OnMapLoad;
@@ -50,6 +38,38 @@ namespace StardewValleyCustomMod
             MenuEvents.MenuClosed += OnMenuClosed;
 
             ControlEvents.KeyPressed += this.ReceiveKeyPress;
+
+            // IDEA:
+            SaveEvents.BeforeSave += Events.Save; // Remove custom buildings from the farm map and save them
+            SaveEvents.AfterSave += Events.Load; // Load custom buildings from the save file
+            SaveEvents.AfterLoad += Events.Load; // Load custom buildings from the save file
+        }
+
+        private void Initialize(IModHelper helper)
+        {
+            ModPath = helper.DirectoryPath;
+            Logger = Monitor;
+
+            Logger.Log("Loading Config...");
+            Config = helper.ReadConfig<Config>();
+            if (Config == null)
+            {
+                Logger.Log("No config file found. Creating a config file.");
+                Config = new Config();
+                helper.WriteConfig<Config>(Config);
+            }
+
+            if (Config.debug)
+                Debug = new DebugLogger();
+
+            try
+            {
+                Logger = Monitor;
+            }
+            catch (Exception err)
+            {
+                Logger.ExitGameImmediately("err",err);
+            }
         }
 
         private void ReceiveKeyPress(object sender, EventArgsKeyPressed e)
@@ -87,75 +107,21 @@ namespace StardewValleyCustomMod
         public void OnMapLoad(object sender, EventArgs e)
         {
             this.Monitor.Log("Loading Building Interior222");
-            ApplyLocation();
+            Events.ApplyLocation();
             this.Monitor.Log("Building Interior successfully loaded!222");
         }
 
-        public static void ApplyLocation()
+        public static void ApplyPatches()
         {
-
-            //AdvancedLocationLoaderMod.Logger.Log(location.ToString(), LogLevel.Trace);
-            string wineryPath = Path.Combine(ModPath, "CustomBuildings");
-            wineryPath = Path.Combine(wineryPath, "BuildingInterior");
-            wineryPath = Path.Combine(wineryPath, "WineryInterior");
-            Logger.Log("Winery File Path: " + wineryPath);
-            try
-            {
-                GameLocation loc;
-                ContentRegistry.RegisterXnb(wineryPath, wineryPath);
-                xTile.Map map = Game1.content.Load<xTile.Map>(wineryPath);
-                /*switch (location.Type)
-                {
-                    case "Cellar":
-                        loc = new StardewValley.Locations.Cellar(map, location.MapName);
-                        loc.objects = new SerializableDictionary<Microsoft.Xna.Framework.Vector2, StardewValley.Object>();
-                        break;
-                    case "BathHousePool":
-                        loc = new StardewValley.Locations.BathHousePool(map, location.MapName);
-                        break;
-                    case "Decoratable":
-                        loc = new Locations.DecoratableLocation(map, location.MapName);
-                        break;
-                    case "Desert":
-                        loc = new Locations.Desert(map, location.MapName);
-                        break;
-                    case "Greenhouse":
-                        loc = new Locations.Greenhouse(map, location.MapName);
-                        break;
-                    case "Sewer":
-                        loc = new Locations.Sewer(map, location.MapName);
-                        break;
-                    default:
-                        loc = new GameLocation(map, location.MapName);
-                        break;
-                }*/
-                //loc.isOutdoors = location.Outdoor;
-                //loc.isFarm = location.Farmable;
-                loc = new StardewValley.Locations.Cellar(map, "WineryInterior");
-                loc.objects = new SerializableDictionary<Microsoft.Xna.Framework.Vector2, StardewValley.Object>();
-                loc.isOutdoors = false;
-                loc.isFarm = false;
-                Game1.locations.Add(loc);
-                Logger.Log("Adding Winery Tilesheet...");
-                /*string fakepath = Path.Combine(Path.GetDirectoryName(tilesheet.FileName), "all_sheet_paths_objects", tilesheet.SheetId, Path.GetFileName(tilesheet.FileName));
-                if (tilesheet.Seasonal)
-                    fakepath = fakepath.Replace("all_sheet_paths_objects", Path.Combine("all_sheet_paths_objects", Game1.currentSeason));
-                stage++; // 3*/
-                string fakepath = ModPath;
-                ContentRegistry.RegisterXnb(fakepath, "Winery");
-                Logger.Log("Winery Tilesheet Added!");
-                //Game1.addNewFarmBuildingMaps();
-            }
-            catch (Exception err)
-            {
-                Logger.ExitGameImmediately("Unable to add custom location, a unexpected error occured: " + "Winery" + err);
-            }
+            Events.ApplyLocation();
+            Events.ApplyTilesheet();
         }
 
         internal static void TimeCheck(object s, EventArgs e)
         {
-            ApplyLocation();
+            Events.ApplyLocation();
         }
+
         internal static void MoreEvents_WorldReady(object s, EventArgs e)
         {
             //if (Configs.Compound.DynamicTiles.Count > 0 || Configs.Compound.DynamicProperties.Count > 0 || Configs.Compound.DynamicWarps.Count > 0)

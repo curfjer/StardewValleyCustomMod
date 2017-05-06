@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using StardewValley;
 using StardewModdingAPI;
+using Entoarox.Framework;
 
 namespace StardewValleyCustomMod.CustomBlueprints
 {
@@ -46,6 +47,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
 
         public CustomBuildingBlueprint()
         {
+            this.canBuildOnCurrentMap = false; //Does this break anything if defaulted to false?
         }
 
         public CustomBuildingBlueprint(string name, IMonitor monitor)
@@ -87,6 +89,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
                     catch (Exception ex)
                     {
                         Game1.debugOutput = "Blueprint loaded with no texture!";
+                        StardewValleyCustomMod.Logger.ExitGameImmediately("Blueprint loaded with no texture", ex);
                     }
                     this.moneyRequired = Convert.ToInt32(strArray1[1]);
                     this.sourceRectForMenuView = new Rectangle(0, 0, Convert.ToInt32(strArray1[2]), Convert.ToInt32(strArray1[3]));
@@ -106,7 +109,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
                     }
                     catch (Exception ex)
                     {
-                        StardewValleyCustomMod.Logger.Log($"The building blueprint for {name} loaded with no texture!");
+                        StardewValleyCustomMod.Logger.ExitGameImmediately($"The building blueprint for {name} loaded with no texture!",ex);
                     }
                     StardewValleyCustomMod.Logger.Log("Parsing Building!"); // DEBUG REMOVE
                     string[] strArray2 = strArray1[0].Split(' ');
@@ -202,7 +205,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
 
             StardewValleyCustomMod.Logger.Log($"The building blueprint for {this.name} loaded with {blueprint.texture.ToString()} and {this.texture.ToString()}!");
 
-            if (StardewValleyCustomMod.config.debug)
+            if (StardewValleyCustomMod.Config.debug)
                 this.CustomBlueprintValuesDebug();
 
             blueprint.namesOfOkayBuildingLocations = this.namesOfOkayBuildingLocations;
@@ -244,7 +247,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
             }
             catch (Exception ex)
             {
-                StardewValleyCustomMod.Logger.Log($"The building blueprint for {this.name} loaded with no texture!");
+                StardewValleyCustomMod.Logger.ExitGameImmediately($"The building blueprint for {this.name} loaded with no texture!",ex);
             }
             this.sourceRectForMenuView = new Rectangle(0, 0, this.sourceRectHeight, this.sourceRectWidth);
 
