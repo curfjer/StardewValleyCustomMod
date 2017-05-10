@@ -24,8 +24,26 @@ namespace StardewValleyCustomMod
         // Load Custom Buildings
         internal static void Load(object s, EventArgs e)
         {
-            // Testing
-            Save(s, e);
+            StardewValleyCustomMod.Logger.Log("Loading custom buildings...");
+
+            XmlSerializer serializer = new XmlSerializer(typeof(PlayerSave));
+            serializer.UnknownNode += new XmlNodeEventHandler(serializer_UnknownNode);
+            serializer.UnknownAttribute += new XmlAttributeEventHandler(serializer_UnknownAttribute);
+
+            string fileName = Path.Combine(StardewValleyCustomMod.ModPath, "customBuildingsList" + ".xml");
+            FileStream fs = new FileStream(fileName, FileMode.Open);
+
+            PlayerSave playerBuildingsList = (PlayerSave)serializer.Deserialize(fs);
+
+            BuildableGameLocation farm = (BuildableGameLocation)Game1.getLocationFromName("Farm");
+            foreach (Building building in playerBuildingsList.buildings)
+            {
+                farm.buildings.Add(building);
+                if (StardewValleyCustomMod.Config.debug)
+                    StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
+            }
+
+            StardewValleyCustomMod.Logger.Log("Custom Buildings Loaded!");
         }
 
         // Save and Remove Custom Buildings
@@ -52,7 +70,7 @@ namespace StardewValleyCustomMod
                     buildings.Add(building);
                     if (StardewValleyCustomMod.Config.debug)
                         StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the custom building list.");
-                    //farm.buildings.Remove(building);
+                    farm.buildings.Remove(building);
                     // Save interior state
                     // Remove building
                 }
@@ -144,6 +162,17 @@ namespace StardewValleyCustomMod
                 StardewValleyCustomMod.Logger.ExitGameImmediately("Unable to add custom tilesheet, a unexpected error occured: " + "Winery" + err);
             }
             
+        }
+
+        private static void serializer_UnknownNode(object sender, XmlNodeEventArgs e)
+        {
+            StardewValleyCustomMod.Logger.Log($"Unknown Node: {e.Name}, {e.Text}");
+        }
+
+        private static void serializer_UnknownAttribute(object sender, XmlAttributeEventArgs e)
+        {
+            System.Xml.XmlAttribute attr = e.Attr;
+            StardewValleyCustomMod.Logger.Log($"Unknown Attribute: {attr.Name} - '{attr.Value}'");
         }
     }
 }

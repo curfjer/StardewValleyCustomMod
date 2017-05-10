@@ -40,9 +40,10 @@ namespace StardewValleyCustomMod
             ControlEvents.KeyPressed += this.ReceiveKeyPress;
 
             // IDEA:
-            SaveEvents.BeforeSave += Events.Save; // Remove custom buildings from the farm map and save them
+            MoreEvents.BeforeSaving += Events.Save; // Remove custom buildings from the farm map and save them
             SaveEvents.AfterSave += Events.Load; // Load custom buildings from the save file
             SaveEvents.AfterLoad += Events.Load; // Load custom buildings from the save file
+            
         }
 
         private void Initialize(IModHelper helper)
