@@ -21,6 +21,7 @@ using xTile;
 
 namespace StardewValleyCustomMod.Menus
 {
+    // Inherit their crafting menu to clean up unnessecary code
     public class CustomBuildingsMenu : IClickableMenu
     {
         public int maxWidthOfBuildingViewer = 7 * Game1.tileSize;
@@ -93,7 +94,8 @@ namespace StardewValleyCustomMod.Menus
                 this.Logger.Log($"Location is: {blueprint.mapToWarpTo}");
             }
             
-            return new GameLocation(this.content.Load<Map>("BuildingInterior\\" + blueprint.mapToWarpTo), blueprint.name);
+            //return new GameLocation(this.content.Load<Map>("BuildingInterior\\" + blueprint.mapToWarpTo), blueprint.name);//why blueprint.name, changed to mapToWarpTo
+            return new GameLocation(this.content.Load<Map>("BuildingInterior\\" + blueprint.mapToWarpTo), blueprint.mapToWarpTo);
         }
 
         public CustomBuildingsMenu()

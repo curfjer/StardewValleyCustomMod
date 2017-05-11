@@ -16,7 +16,7 @@ namespace StardewValleyCustomMod
     public class PlayerSave
     {
         public string player;
-        public Building[] buildings;
+        public CustomBuilding[] buildings;
     }
 
     internal static class Events
@@ -30,15 +30,22 @@ namespace StardewValleyCustomMod
             serializer.UnknownNode += new XmlNodeEventHandler(serializer_UnknownNode);
             serializer.UnknownAttribute += new XmlAttributeEventHandler(serializer_UnknownAttribute);
 
-            string fileName = Path.Combine(StardewValleyCustomMod.ModPath, "customBuildingsList" + ".xml");
-            FileStream fs = new FileStream(fileName, FileMode.Open);
+            string saveGameName = Game1.player.name + "_" + Game1.uniqueIDForThisGame;
+            string fileName = Path.Combine(StardewValleyCustomMod.ModPath, saveGameName + ".xml");
+            FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
 
             PlayerSave playerBuildingsList = (PlayerSave)serializer.Deserialize(fs);
 
+            ApplyLocation();
+            ApplyTilesheet();
+
             BuildableGameLocation farm = (BuildableGameLocation)Game1.getLocationFromName("Farm");
-            foreach (Building building in playerBuildingsList.buildings)
+            foreach (CustomBuilding building in playerBuildingsList.buildings)
             {
-                farm.buildings.Add(building);
+                StardewValleyCustomMod.Logger.Log("Adding building to farm");
+                farm.buildings.Add(building.ConvertCustomBuildingToBuilding());
+                StardewValleyCustomMod.Logger.Log("Loading building...");
+                building.load();//needed or no?
                 if (StardewValleyCustomMod.Config.debug)
                     StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
             }
@@ -49,14 +56,16 @@ namespace StardewValleyCustomMod
         // Save and Remove Custom Buildings
         internal static void Save(object s, EventArgs e)
         {
-            string fileName = Path.Combine(StardewValleyCustomMod.ModPath, "customBuildingsList" + ".xml");
+            PlayerSave playerBuildingsList = new PlayerSave();
+            playerBuildingsList.player = Game1.player.name + "_" + Game1.uniqueIDForThisGame; // Use if just one save file for all different farms
+            //playerBuildingsList.buildings = new List<Building>();
+            List<Building> playerBuildings = new List<Building>();
+            List<CustomBuilding> buildings = new List<CustomBuilding>();
+
+            string fileName = Path.Combine(StardewValleyCustomMod.ModPath, playerBuildingsList.player + ".xml");
             XmlSerializer serializer = new XmlSerializer(typeof(PlayerSave));
             TextWriter writer = new StreamWriter(fileName);
             //Dictionary<string, List<Building>> playerBuildingsList = new Dictionary<string, List<Building>>();
-            List<Building> buildings = new List<Building>();
-            PlayerSave playerBuildingsList = new PlayerSave();
-            playerBuildingsList.player = "Test";
-            //playerBuildingsList.buildings = new List<Building>();
 
             StardewValleyCustomMod.Logger.Log("Creating save file...");
 
@@ -67,26 +76,42 @@ namespace StardewValleyCustomMod
                 {
                     // Get building coordinates
                     //playerBuildingsList.buildings.Add(building);
-                    buildings.Add(building);
+                    buildings.Add(new CustomBuilding(building));
+                    playerBuildings.Add(building);
                     if (StardewValleyCustomMod.Config.debug)
                         StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the custom building list.");
-                    farm.buildings.Remove(building);
+                    //StardewValleyCustomMod.Logger.Log("Removing building from farm");
+                    //farm.buildings.Remove(building);//might need to get building by coordinates and pass it that
                     // Save interior state
                     // Remove building
                 }
             }
+            
+            // Remove buildings from the games farm building list so it does not save and try to load
+            foreach (Building building in playerBuildings)
+            {
+                if (StardewValleyCustomMod.Config.debug)
+                    StardewValleyCustomMod.Logger.Log($"Removing {building.buildingType} from the building list.");
+                farm.buildings.Remove(building);
+            }
+
             //playerBuildingsList.Add("Test",buildings);
             playerBuildingsList.buildings = buildings.ToArray();
             serializer.Serialize(writer, playerBuildingsList);
             writer.Close();
-            StardewValleyCustomMod.Logger.Log("Save File created for TEST.");
+            StardewValleyCustomMod.Logger.Log($"Save File created for '{playerBuildingsList.player}'.");
         }
 
         public static bool CustomBuildingCheck(Building building)
         {
+            if (StardewValleyCustomMod.Config.debug)
+                StardewValleyCustomMod.Logger.Log($"Checking if {building.buildingType} is a custom building.");
+
             foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.Config.blueprintList)
                 if (building.buildingType.Equals(blu.name))
                     return true;
+            if (StardewValleyCustomMod.Config.debug)
+                StardewValleyCustomMod.Logger.Log("CustomBuildingCheck FAILED");
             return false;
         }
 

@@ -14,6 +14,7 @@ using Entoarox.Framework;
 
 namespace StardewValleyCustomMod.CustomBlueprints
 {
+    // TODO: Inherit the orginal blueprint class to clean up code that is not needed
     public class CustomBuildingBlueprint
     {
         private List<string> namesOfOkayBuildingLocations = new List<string>();

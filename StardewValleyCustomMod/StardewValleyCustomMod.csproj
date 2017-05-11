@@ -64,11 +64,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomBuilding.cs" />
     <Compile Include="DebugLogger.cs" />
     <Compile Include="Events.cs" />
     <Compile Include="StardewValleyCustomMod.cs" />
     <Compile Include="CustomBuildableGameLocations.cs" />
-    <Compile Include="CustomBuilding.cs" />
+    <Compile Include="BuildingStardew.cs" />
     <Compile Include="CustomBuildingBlueprint.cs" />
     <Compile Include="Menus\CustomBuildingsMenu.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
