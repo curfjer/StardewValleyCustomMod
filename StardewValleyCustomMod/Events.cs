@@ -42,10 +42,10 @@ namespace StardewValleyCustomMod
             BuildableGameLocation farm = (BuildableGameLocation)Game1.getLocationFromName("Farm");
             foreach (CustomBuilding building in playerBuildingsList.buildings)
             {
-                StardewValleyCustomMod.Logger.Log("Adding building to farm");
-                farm.buildings.Add(building.ConvertCustomBuildingToBuilding());
                 StardewValleyCustomMod.Logger.Log("Loading building...");
                 building.load();//needed or no?
+                StardewValleyCustomMod.Logger.Log("Adding building to farm");
+                farm.buildings.Add(building.ConvertCustomBuildingToBuilding());
                 if (StardewValleyCustomMod.Config.debug)
                     StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
             }
