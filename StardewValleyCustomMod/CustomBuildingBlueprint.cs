@@ -11,10 +11,10 @@ using System.Collections.Generic;
 using StardewValley;
 using StardewModdingAPI;
 using Entoarox.Framework;
+using System.IO;
 
 namespace StardewValleyCustomMod.CustomBlueprints
 {
-    // TODO: Inherit the orginal blueprint class to clean up code that is not needed
     public class CustomBuildingBlueprint
     {
         private List<string> namesOfOkayBuildingLocations = new List<string>();
@@ -43,21 +43,23 @@ namespace StardewValleyCustomMod.CustomBlueprints
         public int sourceRectWidth { get; set; } = 0;
         private bool canBuildOnCurrentMap;
         public bool magical { get; set; } = false;
-        private IMonitor monitor;
+        public string interiorType { get; set; } = "";
+        public bool interiorFarmable { get; set; } = false;
+        public bool interiorOutdoor { get; set; } = false;
+        public bool seasonal { get; set; } = false;
+        //private IMonitor monitor;
         private LocalizedContentManager content;
 
         public CustomBuildingBlueprint()
         {
             this.canBuildOnCurrentMap = false; //Does this break anything if defaulted to false?
         }
-
+        /*
         public CustomBuildingBlueprint(string name, IMonitor monitor)
         {
             this.monitor = monitor;
             this.content = new LocalizedContentManager(Game1.content.ServiceProvider, "Mods\\StardewValleyCustomMod\\CustomBuildings");
             this.name = name;
-            StardewValleyCustomMod.Logger.Log($"Filepath for Game1 is:{Game1.content.RootDirectory}"); // DEBUG REMOVE
-            StardewValleyCustomMod.Logger.Log($"Filepath for mod is:{this.content.RootDirectory}"); // DEBUG REMOVE
             if (name.Equals("Info Tool"))
             {
                 this.texture = Game1.content.Load<Texture2D>("LooseSprites\\Cursors");
@@ -67,19 +69,19 @@ namespace StardewValleyCustomMod.CustomBlueprints
             else
             {
                 Dictionary<string, string> dictionary = content.Load<Dictionary<string, string>>("Blueprints");
-                StardewValleyCustomMod.Logger.Log("Obtained blueprint list!"); // DEBUG REMOVE
+                StardewValleyCustomMod.Logger.Log("Obtained blueprint list!");
                 string str1 = (string)null;
                 string key = name;
                 // ISSUE: explicit reference operation
                 // ISSUE: variable of a reference type
                 string local = @str1;
-                StardewValleyCustomMod.Logger.Log($"str1 Local: {local}"); // DEBUG REMOVE
                 dictionary.TryGetValue(key, out local);
-                StardewValleyCustomMod.Logger.Log($"Dict Local: {local}"); // DEBUG REMOVE
                 str1 = local; //Is this redundant? Why was str1 and local needed in original code?
                 if (str1 == null)
                     return;
-                StardewValleyCustomMod.Logger.Log("Parsing File!"); // DEBUG REMOVE
+                if(StardewValleyCustomMod.Config.debug)
+                    StardewValleyCustomMod.Logger.Log("Parsing File!"); // DEBUG REMOVE
+
                 string[] strArray1 = str1.Split('/');
                 if (strArray1[0].Equals("animal"))
                 {
@@ -144,8 +146,9 @@ namespace StardewValleyCustomMod.CustomBlueprints
                     this.magical = Convert.ToBoolean(strArray1[17]);
                 }
             }
-        }
+        }*/
 
+        // Base Code
         public void consumeResources()
         {
             foreach (KeyValuePair<int, int> keyValuePair in this.itemsRequired)
@@ -153,6 +156,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
             Game1.player.Money -= this.moneyRequired;
         }
 
+        // Base Code
         public int getTileSheetIndexForStructurePlacementTile(int x, int y)
         {
             if (x == this.humanDoor.X && y == this.humanDoor.Y)
@@ -160,6 +164,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
             return x == this.animalDoor.X && y == this.animalDoor.Y ? 4 : 0;
         }
 
+        // Base Code
         public bool isUpgrade()
         {
             if (this.nameOfBuildingToUpgrade != null)
@@ -167,6 +172,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
             return false;
         }
 
+        // Base Code
         public bool doesFarmerHaveEnoughResourcesToBuild()
         {
             foreach (KeyValuePair<int, int> keyValuePair in this.itemsRequired)
@@ -177,6 +183,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
             return Game1.player.Money >= this.moneyRequired;
         }
 
+        // Base Code
         public void drawDescription(SpriteBatch b, int x, int y, int width)
         {
             b.DrawString(Game1.smallFont, this.name, new Vector2((float)x, (float)y), Game1.textColor);
@@ -201,14 +208,16 @@ namespace StardewValleyCustomMod.CustomBlueprints
 
         public BluePrint convertCustomBlueprintToBluePrint()
         {
+            // Create dummy blueprint
             BluePrint blueprint = new BluePrint("Shed");
             this.LoadCustomBuildingBlueprint();
 
             StardewValleyCustomMod.Logger.Log($"The building blueprint for {this.name} loaded with {blueprint.texture.ToString()} and {this.texture.ToString()}!");
 
-            if (StardewValleyCustomMod.Config.debug)
-                this.CustomBlueprintValuesDebug();
+            if (StardewValleyCustomMod.Config.Debug)
+                StardewValleyCustomMod.Debug.DebugCustomBlueprintValues(this);
 
+            // Change dummy blueprint to the current custom blueprint
             blueprint.namesOfOkayBuildingLocations = this.namesOfOkayBuildingLocations;
             blueprint.itemsRequired = this.itemsRequired;
             blueprint.name = this.name;
@@ -237,7 +246,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
 
             return blueprint;
         }
-
+        
         public void LoadCustomBuildingBlueprint()
         {
             this.content = new LocalizedContentManager(Game1.content.ServiceProvider, "Mods\\StardewValleyCustomMod\\CustomBuildings");
@@ -252,31 +261,62 @@ namespace StardewValleyCustomMod.CustomBlueprints
             }
             this.sourceRectForMenuView = new Rectangle(0, 0, this.sourceRectHeight, this.sourceRectWidth);
 
+            // Create methods for this to add to itemsRequired for each item used? TODO
             if (this.woodRequired > 0)
                 this.itemsRequired.Add(388, this.woodRequired);
             if (this.stoneRequired > 0)
                 this.itemsRequired.Add(390, this.stoneRequired);
         }
 
-        public void CustomBlueprintValuesDebug()
+        public GameLocation GetIndoors()
         {
-            StardewValleyCustomMod.Logger.Log($"Name: {this.name}");
-            StardewValleyCustomMod.Logger.Log($"Wood Required: {this.woodRequired}");
-            StardewValleyCustomMod.Logger.Log($"Stone Required: {this.stoneRequired}");
-            StardewValleyCustomMod.Logger.Log($"Copper Required: {this.copperRequired}");
-            StardewValleyCustomMod.Logger.Log($"Iron Required: {this.IronRequired}");
-            StardewValleyCustomMod.Logger.Log($"Gold Required: {this.GoldRequired}");
-            StardewValleyCustomMod.Logger.Log($"Iridium Required: {this.IridiumRequired}");
-            StardewValleyCustomMod.Logger.Log($"Tiles Width: {this.tilesWidth}");
-            StardewValleyCustomMod.Logger.Log($"Tiles Height: {this.tilesHeight}");
-            StardewValleyCustomMod.Logger.Log($"Max Occupants: {this.maxOccupants}");
-            StardewValleyCustomMod.Logger.Log($"Money Required: {this.moneyRequired}");
-            StardewValleyCustomMod.Logger.Log($"Map To Warp To: {this.mapToWarpTo}");
-            StardewValleyCustomMod.Logger.Log($"Description: {this.description}");
-            StardewValleyCustomMod.Logger.Log($"Blueprint Type: {this.blueprintType}");
-            StardewValleyCustomMod.Logger.Log($"Name of Building to Upgrade: {this.nameOfBuildingToUpgrade}");
-            StardewValleyCustomMod.Logger.Log($"Action Behavior: {this.actionBehavior}");
-            StardewValleyCustomMod.Logger.Log($"Magical: {this.magical}");
+            String interiorPath = Path.Combine(StardewValleyCustomMod.ModPath, "BuildingInterior", this.mapToWarpTo);
+            try
+            {
+                GameLocation interior;
+                StardewValleyCustomMod.ContentRegistry.RegisterXnb(interiorPath, interiorPath);
+                //xTile.Map map = Game1.content.Load<xTile.Map>(interiorPath);
+                xTile.Map map = StardewValleyCustomMod.Content.Load<xTile.Map>("BuildingInterior\\" + this.mapToWarpTo);
+                switch (this.interiorType)
+                {
+                    case "Cellar":
+                        interior = new StardewValley.Locations.Cellar(map, this.mapToWarpTo);
+                        interior.objects = new SerializableDictionary<Microsoft.Xna.Framework.Vector2, StardewValley.Object>();
+                        break;
+                    case "BathHousePool":
+                        interior = new StardewValley.Locations.BathHousePool(map, this.mapToWarpTo);
+                        break;
+                    case "Decoratable":
+                        interior = new StardewValley.Locations.DecoratableLocation(map, this.mapToWarpTo);
+                        break;
+                    case "Desert":
+                        interior = new StardewValley.Locations.Desert(map, this.mapToWarpTo);
+                        break;
+                    case "Greenhouse":
+                        interior = new GameLocation(map, this.mapToWarpTo);
+                        //interior = new StardewValley.Locations.Greenhouse(map, this.mapToWarpTo);
+                        break;
+                    case "Sewer":
+                        interior = new StardewValley.Locations.Sewer(map, this.mapToWarpTo);
+                        break;
+                    default:
+                        interior = new GameLocation(map, this.mapToWarpTo);
+                        break;
+                }
+                interior.isOutdoors = this.interiorOutdoor;
+                interior.isFarm = this.interiorFarmable;
+                interior.objects = new SerializableDictionary<Microsoft.Xna.Framework.Vector2, StardewValley.Object>();
+                Game1.locations.Add(interior);
+                StardewValleyCustomMod.Logger.Log($"Added {this.mapToWarpTo}");
+
+                return interior;
+            }
+            catch (Exception err)
+            {
+                StardewValleyCustomMod.Logger.ExitGameImmediately("Unable to add custom location, a unexpected error occured: " + "Winery" + err);
+            }
+            return null;
         }
+        
     }
 }

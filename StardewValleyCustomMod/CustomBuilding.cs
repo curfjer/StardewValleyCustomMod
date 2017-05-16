@@ -6,15 +6,18 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
+using StardewValley.Buildings;
 using StardewValley.Locations;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
+using StardewValleyCustomMod.CustomBlueprints;
 using xTile;
 
-namespace StardewValley.Buildings
+namespace StardewValleyCustomMod
 {
-    public class CustomBuilding : Building
+    public class CustomBuilding : StardewValley.Buildings.Building
     {
+        public bool seasonal;
         private LocalizedContentManager Content;
 
         public CustomBuilding()
@@ -49,15 +52,23 @@ namespace StardewValley.Buildings
         public override void load()
         {
             this.Content = new LocalizedContentManager(Game1.content.ServiceProvider, "Mods\\StardewValleyCustomMod\\CustomBuildings");
-            this.texture = this.Content.Load<Texture2D>(this.buildingType);// Create a custom building then convert back to orig building
-            GameLocation indoors1 = this.getIndoors();
+            this.GetInfoFromBlueprint();
+            if (this.seasonal)
+            {
+                this.texture = this.Content.Load<Texture2D>(this.buildingType + "_" + Game1.currentSeason);
+            }
+            else
+            {
+                this.texture = this.Content.Load<Texture2D>(this.buildingType);// Create a custom building then convert back to orig building
+            }            
+            GameLocation indoors1 = this.GetIndoors();
             if (indoors1 == null)
                 return;
             indoors1.characters = this.indoors.characters;
             indoors1.objects = this.indoors.objects;
             indoors1.terrainFeatures = this.indoors.terrainFeatures;
-            indoors1.IsFarm = true;
-            indoors1.IsOutdoors = false;
+            //indoors1.IsFarm = true;
+            //indoors1.IsOutdoors = false;
             indoors1.isStructure = true;
             indoors1.uniqueName = indoors1.name + (object)(this.tileX * 2000 + this.tileY);
             indoors1.numberOfSpawnedObjectsOnMap = this.indoors.numberOfSpawnedObjectsOnMap;
@@ -110,6 +121,7 @@ namespace StardewValley.Buildings
                 indoors2.animalLimit = 8;
         }
 
+        /*
         protected override GameLocation getIndoors()
         {
             if (this.buildingType.Equals("Slime Hutch"))
@@ -170,6 +182,91 @@ namespace StardewValley.Buildings
                 animalHouse.animalLimit = str == "Big" ? 8 : (str == "Deluxe" ? 12 : 4);
             }
             return gameLocation1;
+        }*/
+
+        public GameLocation GetIndoors()
+        {
+            GameLocation interior = null;
+
+            foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.Config.BlueprintList)
+            {
+                if (blu.name.Equals(this.buildingType))
+                {
+                    interior = blu.GetIndoors();
+
+                    foreach (Warp warp in interior.warps)
+                    {
+                        int num1 = this.humanDoor.X + this.tileX;
+                        warp.TargetX = num1;
+                        int num2 = this.humanDoor.Y + this.tileY + 1;
+                        warp.TargetY = num2;
+                    }
+                    return interior;
+                }
+            }
+
+            return interior;
+            /*
+            try
+            {
+                GameLocation loc;
+                StardewValleyCustomMod.ContentRegistry.RegisterXnb(wineryPath, wineryPath);
+                xTile.Map map = Game1.content.Load<xTile.Map>(wineryPath);
+                switch (location.Type)
+                {
+                    case "Cellar":
+                        loc = new StardewValley.Locations.Cellar(map, location.MapName);
+                        loc.objects = new SerializableDictionary<Microsoft.Xna.Framework.Vector2, StardewValley.Object>();
+                        break;
+                    case "BathHousePool":
+                        loc = new StardewValley.Locations.BathHousePool(map, location.MapName);
+                        break;
+                    case "Decoratable":
+                        loc = new StardewValley.Locations.DecoratableLocation(map, location.MapName);
+                        break;
+                    case "Desert":
+                        loc = new StardewValley.Locations.Desert(map, location.MapName);
+                        break;
+                    case "Greenhouse":
+                        loc = new StardewValley.Locations.Greenhouse(map, location.MapName);
+                        break;
+                    case "Sewer":
+                        loc = new StardewValley.Locations.Sewer(map, location.MapName);
+                        break;
+                    default:
+                        loc = new GameLocation(map, location.MapName);
+                        break;
+                }
+                //loc.isOutdoors = location.Outdoor;
+                //loc.isFarm = location.Farmable;
+                loc = new StardewValley.Locations.Cellar(map, "WineryInterior");
+                loc.objects = new SerializableDictionary<Microsoft.Xna.Framework.Vector2, StardewValley.Object>();
+                loc.isOutdoors = false;
+                loc.isFarm = false;
+                Game1.locations.Add(loc);
+                StardewValleyCustomMod.Logger.Log("Adding Winery Tilesheet...");
+            }
+            catch (Exception err)
+            {
+                StardewValleyCustomMod.Logger.ExitGameImmediately("Unable to add custom location, a unexpected error occured: " + "Winery" + err);
+            }
+
+            
+
+            GameLocation gameLocation1 = new GameLocation(this.Content.Load<Map>("BuildingInterior\\" + this.nameOfIndoorsWithoutUnique), this.buildingType);
+            gameLocation1.IsFarm = true;
+            gameLocation1.isStructure = true;
+            */
+            /*
+            foreach (Warp warp in gameLocation1.warps)
+            {
+                int num1 = this.humanDoor.X + this.tileX;
+                warp.TargetX = num1;
+                int num2 = this.humanDoor.Y + this.tileY + 1;
+                warp.TargetY = num2;
+            }
+            return gameLocation1;*/
+
         }
 
         public Building ConvertCustomBuildingToBuilding()
@@ -198,6 +295,13 @@ namespace StardewValley.Buildings
             building.owner = this.owner;
 
             return building;
+        }
+
+        // Get information from custom blueprint that building does not store
+        public void GetInfoFromBlueprint()
+        {
+            CustomBuildingBlueprint blu = StardewValleyCustomMod.Config.GetCustomBuildingBlueprint(this.buildingType);
+            this.seasonal = blu.seasonal;
         }
     }
 }

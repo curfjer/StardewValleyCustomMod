@@ -4,6 +4,23 @@
 // MVID: 8735DDC4-C499-43F5-9D59-831F1FFC73CF
 // Assembly location: E:\SteamLibrary\steamapps\common\Stardew Valley\Stardew Valley.exe
 
+/* TODO
+ * Buttons on the side:
+ *  Description
+ *  Cost
+ *  Stats? - How many built on farm, if animals how many on farm?
+ *  Select Interior
+ *  Details? - includes description, size, interior selected, days to construct
+ *  
+ * Interior options
+ *  player can select what interior they want
+ *  Select Interior Button
+ * 
+ * Exterior options?
+ * 
+ * View interiors other rooms/floors???
+ */
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -18,10 +35,11 @@ using StardewValley.Menus;
 using StardewValleyCustomMod.CustomBlueprints;
 using StardewModdingAPI;
 using xTile;
+using StardewValley.TerrainFeatures;
+using System;
 
 namespace StardewValleyCustomMod.Menus
 {
-    // Inherit their crafting menu to clean up unnessecary code
     public class CustomBuildingsMenu : IClickableMenu
     {
         public int maxWidthOfBuildingViewer = 7 * Game1.tileSize;
@@ -39,6 +57,9 @@ namespace StardewValleyCustomMod.Menus
         private ClickableTextureComponent upgradeIcon;
         private ClickableTextureComponent demolishButton;
         private ClickableTextureComponent moveButton;
+        private ClickableTextureComponent detailsTab;
+        private ClickableTextureComponent costTab;
+        private ClickableTextureComponent interiorButton;
         private Building currentBuilding;
         private Building buildingToMove;
         private string buildingDescription;
@@ -55,48 +76,8 @@ namespace StardewValleyCustomMod.Menus
         private GameLocation shopLocation;
         private IMonitor Logger;
         private bool debug;
-
-        public BluePrint CurrentBlueprint
-        {
-            get
-            {
-                return this.blueprints[this.currentBlueprintIndex];
-            }
-        }
-
-        //string buildingType, string nameOfIndoors, int tileX, int tileY, int tilesWide, int tilesTall, 
-        //Point humanDoor, Point animalDoor, GameLocation indoors, Texture2D texture, bool magical, long owner
-        private Building GetBuildingFromBlueprint(BluePrint blueprint)
-        {
-            // Dummy location
-            GameLocation blueprintIndoorLocation = (GameLocation)new Shed(Game1.content.Load<Map>("Maps\\" + "Shed"), "Shed");
-
-            if (blueprint.mapToWarpTo != null && blueprint.mapToWarpTo.Length > 0 && !blueprint.mapToWarpTo.Equals("null"))
-            {
-                if (this.debug)
-                    this.Logger.Log("mapToWarpTo is not null!");
-                blueprintIndoorLocation = this.GetGameLocationFromBlueprint(blueprint);
-            }
-
-            if (this.debug)
-                StardewValleyCustomMod.Debug.DebugBlueprintDetails(blueprint, blueprintIndoorLocation);
-
-            return new Building(blueprint.name, blueprint.mapToWarpTo, (int) Vector2.Zero.X, (int) Vector2.Zero.Y, 
-                blueprint.tilesWidth, blueprint.tilesHeight, blueprint.humanDoor, blueprint.animalDoor, 
-                blueprintIndoorLocation, blueprint.texture, blueprint.magical, 0);
-        }
-
-        private GameLocation GetGameLocationFromBlueprint(BluePrint blueprint)
-        {
-            if (this.debug)
-            {
-                this.Logger.Log($"Getting location for: {blueprint.name}");
-                this.Logger.Log($"Location is: {blueprint.mapToWarpTo}");
-            }
-            
-            //return new GameLocation(this.content.Load<Map>("BuildingInterior\\" + blueprint.mapToWarpTo), blueprint.name);//why blueprint.name, changed to mapToWarpTo
-            return new GameLocation(this.content.Load<Map>("BuildingInterior\\" + blueprint.mapToWarpTo), blueprint.mapToWarpTo);
-        }
+        private int currentTab;
+        private bool interior;
 
         public CustomBuildingsMenu()
         {
@@ -106,10 +87,12 @@ namespace StardewValleyCustomMod.Menus
             this.content = new LocalizedContentManager(Game1.content.ServiceProvider, "Mods\\StardewValleyCustomMod\\CustomBuildings");
             this.blueprints = new List<BluePrint>();
             this.Logger = StardewValleyCustomMod.Logger;
-            this.debug = StardewValleyCustomMod.Config.debug;
+            this.debug = StardewValleyCustomMod.Config.Debug;
+            this.currentTab = 0;
+            this.interior = false;
 
             this.Logger.Log("Loading Crafting Menu...");
-            foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.Config.blueprintList)
+            foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.Config.BlueprintList)
             {
                 this.blueprints.Add(blu.convertCustomBlueprintToBluePrint());
                 if (this.debug)
@@ -120,8 +103,33 @@ namespace StardewValleyCustomMod.Menus
             this.setNewActiveBlueprint();
         }
 
+        private void DrawCoords()
+        {
+            StardewValleyCustomMod.Logger.Log($"xPositionOnScreen: {this.xPositionOnScreen}");
+            StardewValleyCustomMod.Logger.Log($"yPositionOnScreen: {this.yPositionOnScreen}");
+            StardewValleyCustomMod.Logger.Log($"width: {this.width}");
+            StardewValleyCustomMod.Logger.Log($"height: {this.height}");
+            StardewValleyCustomMod.Logger.Log($"IClickableMenu.borderWidth: {IClickableMenu.borderWidth}");
+            StardewValleyCustomMod.Logger.Log($"IClickableMenu.spaceToClearSideBorder: {IClickableMenu.spaceToClearSideBorder}");
+            StardewValleyCustomMod.Logger.Log($"Game1.tilsSize: {Game1.tileSize}");
+            StardewValleyCustomMod.Logger.Log($"maxHeightOfBuildingViewer: {this.maxHeightOfBuildingViewer}");
+            StardewValleyCustomMod.Logger.Log($"Game1.pixelZoom: {Game1.pixelZoom}");
+
+            StardewValleyCustomMod.Logger.Log("Buttons:");
+
+            StardewValleyCustomMod.Logger.Log($"okButton - X: {this.okButton.bounds.X}, Y: {this.okButton.bounds.Y}, W: {this.okButton.bounds.Width} H: {this.okButton.bounds.Height}");
+            StardewValleyCustomMod.Logger.Log($"cancelButton - X: {this.cancelButton.bounds.X}, Y: {this.cancelButton.bounds.Y}, W: {this.cancelButton.bounds.Width} H: {this.cancelButton.bounds.Height}");
+            StardewValleyCustomMod.Logger.Log($"backButton - X: {this.backButton.bounds.X}, Y: {this.backButton.bounds.Y}, W: {this.backButton.bounds.Width} H: {this.backButton.bounds.Height}");
+            StardewValleyCustomMod.Logger.Log($"forwardButton - X: {this.forwardButton.bounds.X}, Y: {this.forwardButton.bounds.Y}, W: {this.forwardButton.bounds.Width} H: {this.forwardButton.bounds.Height}");
+            StardewValleyCustomMod.Logger.Log($"demolishButton - X: {this.demolishButton.bounds.X}, Y: {this.demolishButton.bounds.Y}, W: {this.demolishButton.bounds.Width} H: {this.demolishButton.bounds.Height}");
+            StardewValleyCustomMod.Logger.Log($"upgradeIcon - X: {this.upgradeIcon.bounds.X}, Y: {this.upgradeIcon.bounds.Y}, W: {this.upgradeIcon.bounds.Width} H: {this.upgradeIcon.bounds.Height}");
+            StardewValleyCustomMod.Logger.Log($"moveButton - X: {this.moveButton.bounds.X}, Y: {this.moveButton.bounds.Y}, W: {this.moveButton.bounds.Width} H: {this.moveButton.bounds.Height}");
+        }
+
         private void resetBounds()
         {
+            Texture2D customTiles = StardewValleyCustomMod.CustomTiles;
+
             this.xPositionOnScreen = Game1.viewport.Width / 2 - this.maxWidthOfBuildingViewer - IClickableMenu.spaceToClearSideBorder;
             this.yPositionOnScreen = Game1.viewport.Height / 2 - this.maxHeightOfBuildingViewer / 2 - IClickableMenu.spaceToClearTopBorder + Game1.tileSize / 2;
             this.width = this.maxWidthOfBuildingViewer + this.maxWidthOfDescription + IClickableMenu.spaceToClearSideBorder * 2 + Game1.tileSize;
@@ -134,21 +142,16 @@ namespace StardewValleyCustomMod.Menus
             this.demolishButton = new ClickableTextureComponent(Game1.content.LoadString("Strings\\UI:Carpenter_Demolish"), new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder - Game1.tileSize * 2 - Game1.pixelZoom * 2, this.yPositionOnScreen + this.maxHeightOfBuildingViewer + Game1.tileSize - Game1.pixelZoom, Game1.tileSize, Game1.tileSize), (string)null, (string)null, Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(348, 372, 17, 17), (float)Game1.pixelZoom, false);
             this.upgradeIcon = new ClickableTextureComponent(new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.maxWidthOfBuildingViewer - Game1.tileSize * 2 + Game1.tileSize / 2, this.yPositionOnScreen + Game1.pixelZoom * 2, 9 * Game1.pixelZoom, 13 * Game1.pixelZoom), Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(402, 328, 9, 13), (float)Game1.pixelZoom, false);
             this.moveButton = new ClickableTextureComponent(Game1.content.LoadString("Strings\\UI:Carpenter_MoveBuildings"), new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder - Game1.tileSize * 4 - Game1.pixelZoom * 5, this.yPositionOnScreen + this.maxHeightOfBuildingViewer + Game1.tileSize, Game1.tileSize, Game1.tileSize), (string)null, (string)null, Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(257, 284, 16, 16), (float)Game1.pixelZoom, false);
+            //this.yPositionOnScreen + Game1.tileSize * 5 / 4
+            this.detailsTab = new ClickableTextureComponent("Details", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder, this.yPositionOnScreen + Game1.tileSize * 5 / 4 + IClickableMenu.spaceToClearTopBorder, Game1.tileSize, Game1.tileSize), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(16, 0, 16, 16), (float)Game1.pixelZoom, false);
+            this.costTab = new ClickableTextureComponent("Cost", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder / 2 /*- Game1.tileSize*/, this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.tileSize + IClickableMenu.spaceToClearTopBorder, Game1.tileSize, Game1.tileSize), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(0, 0, 16, 16), (float)Game1.pixelZoom, false);
+            this.interiorButton = new ClickableTextureComponent("Select Interior", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width - IClickableMenu.borderWidth, this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.tileSize * 2 + Game1.pixelZoom*4 + IClickableMenu.spaceToClearTopBorder, 25 * Game1.pixelZoom, 18 * Game1.pixelZoom), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(32, 0, 25, 18), (float)Game1.pixelZoom, false);
+
+            this.DrawCoords();
         }
 
         public void setNewActiveBlueprint()
         {
-            /*
-            this.currentBuilding = !this.blueprints[this.currentBlueprintIndex].name.Contains("Coop") ? 
-                (!this.blueprints[this.currentBlueprintIndex].name.Contains("Barn") ? 
-                (!this.blueprints[this.currentBlueprintIndex].name.Contains("Mill") ? 
-                (!this.blueprints[this.currentBlueprintIndex].name.Contains("Junimo Hut") ? 
-                new Building(this.blueprints[this.currentBlueprintIndex], Vector2.Zero) : 
-                (Building)new JunimoHut(this.blueprints[this.currentBlueprintIndex], Vector2.Zero)) : 
-                (Building)new Mill(this.blueprints[this.currentBlueprintIndex], Vector2.Zero)) : 
-                (Building)new Barn(this.blueprints[this.currentBlueprintIndex], Vector2.Zero)) : 
-                (Building)new Coop(this.blueprints[this.currentBlueprintIndex], Vector2.Zero); 
-            // !a ? ( !b ? ( !c ? ( !d ? e : f ) : g ) : h ) : i );*/
             this.Logger.Log($"CurrentBlueprintIndex: {this.currentBlueprintIndex}"); // DEBUG REMOVE
             //this.currentBuilding = new Building(this.blueprints[this.currentBlueprintIndex], Vector2.Zero);
             this.currentBuilding = this.GetBuildingFromBlueprint(this.CurrentBlueprint);
@@ -167,11 +170,17 @@ namespace StardewValleyCustomMod.Menus
             base.performHoverAction(x, y);
             if (!this.onFarm)
             {
+                // Hover Icon
                 this.backButton.tryHover(x, y, 1f);
                 this.forwardButton.tryHover(x, y, 1f);
                 this.okButton.tryHover(x, y, 0.1f);
                 this.demolishButton.tryHover(x, y, 0.1f);
                 this.moveButton.tryHover(x, y, 0.1f);
+                //this.detailsButton.tryHover(x, y, 0.1f);
+                //this.costButton.tryHover(x, y, 0.1f);
+                this.interiorButton.tryHover(x, y, 0.1f);
+
+                // Hover Text
                 if (this.CurrentBlueprint.isUpgrade() && this.upgradeIcon.containsPoint(x, y))
                     this.hoverText = Game1.content.LoadString("Strings\\UI:Carpenter_Upgrade", (object)this.CurrentBlueprint.nameOfBuildingToUpgrade);
                 else if (this.demolishButton.containsPoint(x, y))
@@ -180,9 +189,16 @@ namespace StardewValleyCustomMod.Menus
                     this.hoverText = Game1.content.LoadString("Strings\\UI:Carpenter_MoveBuildings");
                 else if (this.okButton.containsPoint(x, y) && this.CurrentBlueprint.doesFarmerHaveEnoughResourcesToBuild())
                     this.hoverText = Game1.content.LoadString("Strings\\UI:Carpenter_Build");
+                else if (this.detailsTab.containsPoint(x, y))
+                    this.hoverText = "Details";
+                else if (this.costTab.containsPoint(x, y))
+                    this.hoverText = "Cost";
+                else if (this.interiorButton.containsPoint(x, y))
+                    this.hoverText = "Select Interior";
                 else
                     this.hoverText = "";
             }
+            // TODO figure what this is doing
             else
             {
                 if (!this.upgrading && !this.demolishing && !this.moving || this.freeze)
@@ -276,6 +292,8 @@ namespace StardewValleyCustomMod.Menus
                 return;
             if (!this.onFarm)
                 base.receiveLeftClick(x, y, playSound);
+
+            // Check buttons and tabs:
             if (this.cancelButton.containsPoint(x, y))
             {
                 if (!this.onFarm)
@@ -291,6 +309,8 @@ namespace StardewValleyCustomMod.Menus
                         Game1.playSound("cancel");
                         return;
                     }
+                    if (this.interior)
+                        this.interior = false;
                     Game1.globalFadeToBlack(new Game1.afterFadeFunction(this.returnToCarpentryMenu), 0.02f);
                     Game1.playSound("smallSelect");
                     return;
@@ -332,8 +352,31 @@ namespace StardewValleyCustomMod.Menus
                 Game1.playSound("smallSelect");
                 this.onFarm = true;
             }
+            if (!this.onFarm && this.detailsTab.containsPoint(x, y))
+            {
+                Game1.playSound("smallSelect");
+                this.currentTab = 0;
+                this.UpdateCurrentTabSelected();
+            }
+            if (!this.onFarm && this.costTab.containsPoint(x, y))
+            {
+                Game1.playSound("smallSelect");
+                this.currentTab = 1;
+                this.UpdateCurrentTabSelected();
+            }
+            if (!this.onFarm && this.interiorButton.containsPoint(x, y))
+            {
+                Game1.playSound("smallSelect");
+                this.interior = true;
+                this.DisplayInterior();
+            }
+
+            // TODO Do not need this if once you make the methods for the if statements below
             if (!this.onFarm || this.freeze || Game1.globalFade)
                 return;
+
+            // Update current option selected:
+            // TODO separate into a method for each if and put in the if statements above
             if (this.demolishing)
             {
                 Building buildingAt = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).getBuildingAt(new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize)));
@@ -458,7 +501,7 @@ namespace StardewValleyCustomMod.Menus
             Game1.displayFarmer = true;
         }
 
-        // CHANGE THIS
+        // CHANGE THIS TODO
         public void robinConstructionMessage()
         {
             this.exitThisMenu(true);
@@ -508,44 +551,99 @@ namespace StardewValleyCustomMod.Menus
             {
                 base.draw(b);
                 IClickableMenu.drawTextureBox(b, this.xPositionOnScreen - Game1.tileSize * 3 / 2, this.yPositionOnScreen - Game1.tileSize / 4, this.maxWidthOfBuildingViewer + Game1.tileSize, this.maxHeightOfBuildingViewer + Game1.tileSize, this.magicalConstruction ? Color.RoyalBlue : Color.White);
-                this.currentBuilding.drawInMenu(b, this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - this.currentBuilding.tilesWide * Game1.tileSize / 2 - Game1.tileSize, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - this.currentBuilding.getSourceRectForMenu().Height * Game1.pixelZoom / 2);
+
+                // TODO do I still need this if else or do I just need that else?
+                if (this.interior)
+                {
+                    //drawInteriorInMenu(b, this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - this.currentBuilding.tilesWide * Game1.tileSize / 2 - Game1.tileSize, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - this.currentBuilding.getSourceRectForMenu().Height * Game1.pixelZoom / 2);
+                }
+                else
+                {
+                    this.currentBuilding.drawInMenu(b, this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - this.currentBuilding.tilesWide * Game1.tileSize / 2 - Game1.tileSize, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - this.currentBuilding.getSourceRectForMenu().Height * Game1.pixelZoom / 2);
+
+                }
+                
+                // Should this be displayed with exterior only?
                 if (this.CurrentBlueprint.isUpgrade())
                     this.upgradeIcon.draw(b);
+
+
                 SpriteText.drawStringWithScrollBackground(b, this.buildingName, this.xPositionOnScreen + this.maxWidthOfBuildingViewer - IClickableMenu.spaceToClearSideBorder - Game1.tileSize / 4 + Game1.tileSize + ((this.width - (this.maxWidthOfBuildingViewer + Game1.tileSize * 2)) / 2 - SpriteText.getWidthOfString("Deluxe Barn") / 2), this.yPositionOnScreen, "Deluxe Barn", 1f, -1);
                 IClickableMenu.drawTextureBox(b, this.xPositionOnScreen + this.maxWidthOfBuildingViewer - Game1.tileSize / 4, this.yPositionOnScreen + Game1.tileSize * 5 / 4, this.maxWidthOfDescription + Game1.tileSize, this.maxWidthOfDescription + Game1.tileSize * 3 / 2, this.magicalConstruction ? Color.RoyalBlue : Color.White);
-                if (this.magicalConstruction)
+
+                // Draw Details Tab:
+                if(this.currentTab == 0)
                 {
-                    Utility.drawTextWithShadow(b, Game1.parseText(this.buildingDescription, Game1.dialogueFont, this.maxWidthOfDescription + Game1.tileSize / 2), Game1.dialogueFont, new Vector2((float)(this.xPositionOnScreen + this.maxWidthOfDescription + Game1.tileSize - Game1.pixelZoom), (float)(this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.pixelZoom * 4 + Game1.pixelZoom)), Game1.textColor * 0.25f, 1f, -1f, -1, -1, 0.0f, 3);
-                    Utility.drawTextWithShadow(b, Game1.parseText(this.buildingDescription, Game1.dialogueFont, this.maxWidthOfDescription + Game1.tileSize / 2), Game1.dialogueFont, new Vector2((float)(this.xPositionOnScreen + this.maxWidthOfDescription + Game1.tileSize - 1), (float)(this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.pixelZoom * 4 + Game1.pixelZoom)), Game1.textColor * 0.25f, 1f, -1f, -1, -1, 0.0f, 3);
-                }
-                Utility.drawTextWithShadow(b, Game1.parseText(this.buildingDescription, Game1.dialogueFont, this.maxWidthOfDescription + Game1.tileSize / 2), Game1.dialogueFont, new Vector2((float)(this.xPositionOnScreen + this.maxWidthOfDescription + Game1.tileSize), (float)(this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.pixelZoom * 4)), this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
-                Vector2 location = new Vector2((float)(this.xPositionOnScreen + this.maxWidthOfDescription + Game1.tileSize / 4 + Game1.tileSize), (float)(this.yPositionOnScreen + Game1.tileSize * 4 + Game1.tileSize / 2));
-                SpriteText.drawString(b, "$", (int)location.X, (int)location.Y, 999999, -1, 999999, 1f, 0.88f, false, -1, "", -1);
-                if (this.magicalConstruction)
-                {
-                    Utility.drawTextWithShadow(b, this.price.ToString() + "g", Game1.dialogueFont, new Vector2(location.X + (float)Game1.tileSize, location.Y + (float)(Game1.pixelZoom * 2)), Game1.textColor * 0.5f, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
-                    Utility.drawTextWithShadow(b, this.price.ToString() + "g", Game1.dialogueFont, new Vector2((float)((double)location.X + (double)Game1.tileSize + (double)Game1.pixelZoom - 1.0), location.Y + (float)(Game1.pixelZoom * 2)), Game1.textColor * 0.25f, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
-                }
-                Utility.drawTextWithShadow(b, this.price.ToString() + "g", Game1.dialogueFont, new Vector2(location.X + (float)Game1.tileSize + (float)Game1.pixelZoom, location.Y + (float)Game1.pixelZoom), Game1.player.money >= this.price ? (this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor) : Color.Red, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
-                location.X -= (float)(Game1.tileSize / 4);
-                location.Y -= (float)(Game1.tileSize / 3);
-                foreach (Item ingredient in this.ingredients)
-                {
-                    location.Y += (float)(Game1.tileSize + Game1.pixelZoom);
-                    ingredient.drawInMenu(b, location, 1f);
-                    bool flag = !(ingredient is StardewValley.Object) || Game1.player.hasItemInInventory((ingredient as StardewValley.Object).parentSheetIndex, ingredient.Stack, 0);
                     if (this.magicalConstruction)
                     {
-                        Utility.drawTextWithShadow(b, ingredient.Name, Game1.dialogueFont, new Vector2(location.X + (float)Game1.tileSize + (float)(Game1.pixelZoom * 3), location.Y + (float)(Game1.pixelZoom * 6)), Game1.textColor * 0.25f, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
-                        Utility.drawTextWithShadow(b, ingredient.Name, Game1.dialogueFont, new Vector2((float)((double)location.X + (double)Game1.tileSize + (double)(Game1.pixelZoom * 4) - 1.0), location.Y + (float)(Game1.pixelZoom * 6)), Game1.textColor * 0.25f, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+                        Utility.drawTextWithShadow(b, Game1.parseText(this.buildingDescription, Game1.dialogueFont, this.maxWidthOfDescription + Game1.tileSize / 2), Game1.dialogueFont, new Vector2((float)(this.xPositionOnScreen + this.maxWidthOfDescription + Game1.tileSize - Game1.pixelZoom), (float)(this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.pixelZoom * 4 + Game1.pixelZoom)), Game1.textColor * 0.25f, 1f, -1f, -1, -1, 0.0f, 3);
+                        Utility.drawTextWithShadow(b, Game1.parseText(this.buildingDescription, Game1.dialogueFont, this.maxWidthOfDescription + Game1.tileSize / 2), Game1.dialogueFont, new Vector2((float)(this.xPositionOnScreen + this.maxWidthOfDescription + Game1.tileSize - 1), (float)(this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.pixelZoom * 4 + Game1.pixelZoom)), Game1.textColor * 0.25f, 1f, -1f, -1, -1, 0.0f, 3);
                     }
-                    Utility.drawTextWithShadow(b, ingredient.Name, Game1.dialogueFont, new Vector2(location.X + (float)Game1.tileSize + (float)(Game1.pixelZoom * 4), location.Y + (float)(Game1.pixelZoom * 5)), flag ? (this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor) : Color.Red, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+                    Utility.drawTextWithShadow(b, Game1.parseText(this.buildingDescription, Game1.dialogueFont, this.maxWidthOfDescription + Game1.tileSize / 2), Game1.dialogueFont, new Vector2((float)(this.xPositionOnScreen + this.maxWidthOfDescription + Game1.tileSize), (float)(this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.pixelZoom * 4)), this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+
+                    string test = Game1.parseText(this.buildingDescription, Game1.dialogueFont, this.maxWidthOfDescription + Game1.tileSize / 2);
+                    int descriptionTotalLines = test.Split('\n').Length;
+                    
+                    // Need to figure out the height of base game font... TODO
+                    Vector2 location = new Vector2((float)(this.xPositionOnScreen + this.maxWidthOfDescription + Game1.tileSize), (float)(this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.pixelZoom * 4 + (20 + Game1.pixelZoom) * 2 * descriptionTotalLines));
+
+                    Utility.drawTextWithShadow(b, "Width: " + this.currentBuilding.tilesWide, Game1.dialogueFont, location, this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+
+                    location.X += Game1.tileSize * 7 / 2;//Game1.dialogueFont.MeasureString("Width: " + this.currentBuilding.tilesWide).Length();
+                    Utility.drawTextWithShadow(b, "Height: " + this.currentBuilding.tilesHigh, Game1.dialogueFont, location, this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+
+                    location.X -= Game1.tileSize * 7 / 2;
+                    location.Y += Game1.tileSize * 2 / 3;
+                    Utility.drawTextWithShadow(b, "Interior: " + this.currentBuilding.nameOfIndoorsWithoutUnique, Game1.dialogueFont, location, this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+
+                    // Change the '2' to a field: daysToConstruct, Remove "Time" and replace with hourglass icon from cursors TODO
+                    location.Y += Game1.tileSize * 2 / 3;
+                    Utility.drawTextWithShadow(b, "Time: " + "2" + " days", Game1.dialogueFont, location, this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
                 }
+
+                // Draw Cost Tab:
+                else if (this.currentTab == 1)
+                {
+                    //Vector2 location = new Vector2((float)(this.xPositionOnScreen + this.maxWidthOfDescription + Game1.tileSize / 4 + Game1.tileSize), (float)(this.yPositionOnScreen + Game1.tileSize * 4 + Game1.tileSize / 2));
+                    Vector2 location = new Vector2((float)(this.xPositionOnScreen + this.maxWidthOfDescription + Game1.tileSize / 4 + Game1.tileSize), (float)(this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.pixelZoom * 4));
+                    SpriteText.drawString(b, "$", (int)location.X, (int)location.Y, 999999, -1, 999999, 1f, 0.88f, false, -1, "", -1);
+                    if (this.magicalConstruction)
+                    {
+                        Utility.drawTextWithShadow(b, this.price.ToString() + "g", Game1.dialogueFont, new Vector2(location.X + (float)Game1.tileSize, location.Y + (float)(Game1.pixelZoom * 2)), Game1.textColor * 0.5f, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+                        Utility.drawTextWithShadow(b, this.price.ToString() + "g", Game1.dialogueFont, new Vector2((float)((double)location.X + (double)Game1.tileSize + (double)Game1.pixelZoom - 1.0), location.Y + (float)(Game1.pixelZoom * 2)), Game1.textColor * 0.25f, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+                    }
+                    Utility.drawTextWithShadow(b, this.price.ToString() + "g", Game1.dialogueFont, new Vector2(location.X + (float)Game1.tileSize + (float)Game1.pixelZoom, location.Y + (float)Game1.pixelZoom), Game1.player.money >= this.price ? (this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor) : Color.Red, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+                    location.X -= (float)(Game1.tileSize / 4);
+                    location.Y -= (float)(Game1.tileSize / 3);
+                    foreach (Item ingredient in this.ingredients)
+                    {
+                        location.Y += (float)(Game1.tileSize + Game1.pixelZoom);
+                        ingredient.drawInMenu(b, location, 1f);
+                        bool flag = !(ingredient is StardewValley.Object) || Game1.player.hasItemInInventory((ingredient as StardewValley.Object).parentSheetIndex, ingredient.Stack, 0);
+                        if (this.magicalConstruction)
+                        {
+                            Utility.drawTextWithShadow(b, ingredient.Name, Game1.dialogueFont, new Vector2(location.X + (float)Game1.tileSize + (float)(Game1.pixelZoom * 3), location.Y + (float)(Game1.pixelZoom * 6)), Game1.textColor * 0.25f, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+                            Utility.drawTextWithShadow(b, ingredient.Name, Game1.dialogueFont, new Vector2((float)((double)location.X + (double)Game1.tileSize + (double)(Game1.pixelZoom * 4) - 1.0), location.Y + (float)(Game1.pixelZoom * 6)), Game1.textColor * 0.25f, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+                        }
+                        Utility.drawTextWithShadow(b, ingredient.Name, Game1.dialogueFont, new Vector2(location.X + (float)Game1.tileSize + (float)(Game1.pixelZoom * 4), location.Y + (float)(Game1.pixelZoom * 5)), flag ? (this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor) : Color.Red, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+                    }
+                }
+                
+                // Draw Buttons and Tabs:
                 this.backButton.draw(b);
                 this.forwardButton.draw(b);
                 this.okButton.draw(b, this.blueprints[this.currentBlueprintIndex].doesFarmerHaveEnoughResourcesToBuild() ? Color.White : Color.Gray * 0.8f, 0.88f);
                 this.demolishButton.draw(b);
                 this.moveButton.draw(b);
+                this.detailsTab.draw(b);
+                this.costTab.draw(b);
+                this.interiorButton.draw(b);
+            }
+            // Draw Interior Selection Screen:
+            else if (this.interior)
+            {
+                string interiorOption = "Select Interior";
+                SpriteText.drawStringWithScrollBackground(b, interiorOption, Game1.viewport.Width / 2 - SpriteText.getWidthOfString(interiorOption) / 2, Game1.tileSize / 4, "", 1f, -1);
             }
             else
             {
@@ -596,6 +694,140 @@ namespace StardewValleyCustomMod.Menus
 
         public override void receiveRightClick(int x, int y, bool playSound = true)
         {
+        }
+
+        public BluePrint CurrentBlueprint
+        {
+            get
+            {
+                return this.blueprints[this.currentBlueprintIndex];
+            }
+        }
+
+        private Building GetBuildingFromBlueprint(BluePrint blueprint)
+        {
+            // Dummy location
+            GameLocation blueprintIndoorLocation = (GameLocation)new Shed(Game1.content.Load<Map>("Maps\\" + "Shed"), "Shed");
+
+            if (blueprint.mapToWarpTo != null && blueprint.mapToWarpTo.Length > 0 && !blueprint.mapToWarpTo.Equals("null"))
+            {
+                if (this.debug)
+                    this.Logger.Log("mapToWarpTo is not null!");
+                blueprintIndoorLocation = this.GetGameLocationFromBlueprint(blueprint);
+            }
+
+            if (this.debug)
+                StardewValleyCustomMod.Debug.DebugBlueprintDetails(blueprint, blueprintIndoorLocation);
+
+            return new Building(blueprint.name, blueprint.mapToWarpTo, (int)Vector2.Zero.X, (int)Vector2.Zero.Y,
+                blueprint.tilesWidth, blueprint.tilesHeight, blueprint.humanDoor, blueprint.animalDoor,
+                blueprintIndoorLocation, blueprint.texture, blueprint.magical, 0);
+        }
+
+        // TODO put in config? or somewhere else? used multiple times?
+        private GameLocation GetGameLocationFromBlueprint(BluePrint blueprint)
+        {
+            if (this.debug)
+            {
+                this.Logger.Log($"Getting location for: {blueprint.name}");
+                this.Logger.Log($"Location is: {blueprint.mapToWarpTo}");
+            }
+
+            foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.Config.BlueprintList)
+            {
+                if (blu.name.Equals(blueprint.name))
+                {
+                    return blu.GetIndoors();
+                }
+            }
+
+            return new GameLocation(this.content.Load<Map>("BuildingInterior\\" + blueprint.mapToWarpTo), blueprint.mapToWarpTo);
+        }
+
+        // Display arrows on bottom (or top?) with name of interior between them?
+        private void DisplayInterior()
+        {
+            GameLocation buildingInterior = GetGameLocationFromBlueprint(this.CurrentBlueprint);
+            this.Logger.Log($"buildingInterior: {buildingInterior.name}");
+            /*
+            if (buildingInterior.IsFarm && buildingInterior.terrainFeatures == null)
+                buildingInterior.terrainFeatures = new SerializableDictionary<Vector2, TerrainFeature>();
+            foreach (NPC character in buildingInterior.characters)
+                character.reloadSprite();
+            foreach (TerrainFeature terrainFeature in buildingInterior.terrainFeatures.Values)
+                terrainFeature.loadSprite();
+            foreach (KeyValuePair<Vector2, StardewValley.Object> keyValuePair in (Dictionary<Vector2, StardewValley.Object>)buildingInterior.objects)
+            {
+                keyValuePair.Value.initializeLightSource(keyValuePair.Key);
+                keyValuePair.Value.reloadSprite();
+            }
+            */
+            //GameLocation test = new GameLocation(Game1.content.Load<Map>(StardewValleyCustomMod.ModPath + "\\CustomBuildings\\BuildingInterior\\WineryInterior"), "WineryInterior");
+            /*
+            GameLocation loc;
+            string str = StardewValleyCustomMod.ModPath + "\\CustomBuildings\\BuildingInterior\\WineryInterior";
+            StardewValleyCustomMod.ContentRegistry.RegisterXnb(str, str);
+            xTile.Map map = Game1.content.Load<xTile.Map>(str);
+            loc = new StardewValley.Locations.Cellar(map, "WineryInteriorTest");
+            loc.objects = new SerializableDictionary<Microsoft.Xna.Framework.Vector2, StardewValley.Object>();
+            loc.isOutdoors = false;
+            loc.isFarm = true;
+            Game1.locations.Add(loc);
+            */
+
+            Game1.currentLocation.cleanupBeforePlayerExit();
+            this.hoverText = "";
+            //Game1.locations.Add(buildingInterior);
+            //Game1.currentLocation = Game1.getLocationFromName(buildingInterior.name);
+            Game1.currentLocation = buildingInterior;
+            //Game1.currentLocation = Game1.getLocationFromName("WineryInteriorTest");
+            this.Logger.Log($"currentLocation: {Game1.currentLocation.name}");
+            Game1.currentLocation.resetForPlayerEntry();
+            Game1.globalFadeToClear((Game1.afterFadeFunction)null, 0.02f);
+            this.onFarm = true;
+            this.cancelButton.bounds.X = Game1.viewport.Width - Game1.tileSize * 2;
+            this.cancelButton.bounds.Y = Game1.viewport.Height - Game1.tileSize * 2;
+            Game1.displayHUD = false;
+            Game1.viewportFreeze = true;
+            Game1.viewport.Location = new Location(49 * Game1.tileSize, 5 * Game1.tileSize);
+            Game1.panScreen(0, 0);
+            this.drawBG = false;
+            this.freeze = false;
+            Game1.displayFarmer = false;
+            // Check exterior and load its interiors
+        }
+
+        /*
+        public virtual void drawInteriorInMenu(SpriteBatch b, int x, int y)
+        {
+            if (this.tilesWide <= 8)
+            {
+                this.drawShadow(b, x, y);
+                b.Draw(this.texture, new Vector2((float)x, (float)y), new Rectangle?(this.texture.Bounds), this.color, 0.0f, new Vector2(0.0f, 0.0f), (float)Game1.pixelZoom, SpriteEffects.None, 0.89f);
+            }
+            else
+            {
+                int num1 = Game1.tileSize + 11 * Game1.pixelZoom;
+                int num2 = Game1.tileSize / 2 - Game1.pixelZoom;
+                b.Draw(this.texture, new Vector2((float)(x + num1), (float)(y + num2)), new Rectangle?(new Rectangle(this.texture.Bounds.Center.X - 64, this.texture.Bounds.Bottom - 136 - 2, 122, 138)), this.color, 0.0f, new Vector2(0.0f, 0.0f), (float)Game1.pixelZoom, SpriteEffects.None, 0.89f);
+            }
+        }*/
+        
+        // TODO make this more effecient
+        private void UpdateCurrentTabSelected()
+        {
+            // Details Tab
+            if(this.currentTab == 0)
+            {
+                this.detailsTab.bounds.X = this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder;
+                this.costTab.bounds.X = this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder / 2;
+            }
+            // Cost Tab
+            else
+            {
+                this.detailsTab.bounds.X = this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder / 2;
+                this.costTab.bounds.X = this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder;
+            }
         }
     }
 }

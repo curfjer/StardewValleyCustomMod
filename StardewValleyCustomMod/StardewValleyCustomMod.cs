@@ -1,4 +1,23 @@
-﻿using System;
+﻿/*
+ *TODO 
+ * More buildings - Bath House (upgrades to increase stamina faster?)?, Arcade?, Greenhouse(upgrades? more room, diff specialties?), Aquarium (display caught fish), ???
+ * Add computer object, interact for menu, select farm buildings, customBuildingsMenu is opened
+ * Add config option for keypress and which key opens the menu
+ * fix keypress so it works more than just once - odd....it works all the time wtf
+ * Ability to have option to choose different interiors? Winery for example
+ * ^^^ Exteriors as well?
+ * Add Multiple Exterior bool - how? seasonal not enough?
+ * Add Multiple Interior bool
+ * Make list for ^^^
+ * Clean code
+ * Birthday/Event Related textures bool???
+ * add ability to adjust days of construction
+ * Give custom buildings a skill level the farmer needs? ex. to build winery - farmer lvl 10, etc.
+ * 
+ * Make it so users can make their own mod packs, they put their folder in "CustomBuildings" and they have a folder for Buildings and BuildingInteriors???
+ */
+
+using System;
 
 using StardewValley;
 using StardewValley.Menus;
@@ -11,45 +30,44 @@ using Entoarox.Framework.Events;
 
 using StardewValleyCustomMod.Menus;
 using StardewValleyCustomMod.CustomBlueprints;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace StardewValleyCustomMod
 {
     class StardewValleyCustomMod : Mod
     {
         public bool shopReplaced;
+        public bool menuOpen;
         internal static Config Config;
         internal static IMonitor Logger;
         internal static IContentRegistry ContentRegistry = EntoFramework.GetContentRegistry();
         internal static string ModPath;
         internal static DebugLogger Debug;
+        internal static LocalizedContentManager Content; // TODO framework has a localizer, can you use that instead?
+        internal static Texture2D CustomTiles;
 
         public override void Entry(IModHelper helper)
         {
             Initialize(helper);
 
-            foreach(CustomBuildingBlueprint blu in Config.blueprintList)
-                Logger.Log($"{blu.name} added.");
-            
-            LocationEvents.CurrentLocationChanged += this.OnMapLoad;
-            MoreEvents.WorldReady += MoreEvents_WorldReady;
-            GameEvents.GameLoaded += MoreEvents_WorldReady;
-
-            MenuEvents.MenuChanged += OnMenuChanged;
-            MenuEvents.MenuClosed += OnMenuClosed;
-
-            ControlEvents.KeyPressed += this.ReceiveKeyPress;
-
-            // IDEA:
             MoreEvents.BeforeSaving += Events.Save; // Remove custom buildings from the farm map and save them
             SaveEvents.AfterSave += Events.Load; // Load custom buildings from the save file
             SaveEvents.AfterLoad += Events.Load; // Load custom buildings from the save file
-            
+
+            // NPC Custom Building Menu Access
+            MenuEvents.MenuChanged += OnMenuChanged;
+            MenuEvents.MenuClosed += OnMenuClosed;
+
+            // Keypress Custom Building Menu Access
+            ControlEvents.KeyPressed += this.ReceiveKeyPress;
         }
 
         private void Initialize(IModHelper helper)
         {
             ModPath = helper.DirectoryPath;
             Logger = Monitor;
+            Content = new LocalizedContentManager(Game1.content.ServiceProvider, ModPath + "\\CustomBuildings");
+            menuOpen = false;
 
             Logger.Log("Loading Config...");
             Config = helper.ReadConfig<Config>();
@@ -60,8 +78,8 @@ namespace StardewValleyCustomMod
                 helper.WriteConfig<Config>(Config);
             }
 
-            if (Config.debug)
-                Debug = new DebugLogger();
+            if (Config.Debug)
+                Debug = new DebugLogger(); // What is this? TEST
 
             try
             {
@@ -71,30 +89,48 @@ namespace StardewValleyCustomMod
             {
                 Logger.ExitGameImmediately("err",err);
             }
+
+            foreach (CustomBuildingBlueprint blu in Config.BlueprintList)
+                Logger.Log($"{blu.name} added.");
+
+            try
+            {
+                CustomTiles = Content.Load<Texture2D>(ModPath + "\\customFarmBuildingTilesheet");
+            }
+            catch (Exception err)
+            {
+                Logger.ExitGameImmediately("Unable to load custom tiles for the custom building menu!",err);
+            }
         }
 
         private void ReceiveKeyPress(object sender, EventArgsKeyPressed e)
         {
-            if (e.KeyPressed.ToString() == "P")
+            if(Config.Debug)
+                Logger.Log($"{e.KeyPressed.ToString()} was pressed.");
+            if (e.KeyPressed.ToString() == Config.ShopAccessKey && Config.ShopAccessViaKeyPress)
             {
-                Logger.Log("Opening MENU");
+                Logger.Log("Opening Custom Building Menu...");
                 if (Game1.activeClickableMenu is null)
                 {
                     Game1.activeClickableMenu = (IClickableMenu)new CustomBuildingsMenu();
                 }
+                else
+                {
+                    Game1.activeClickableMenu.exitThisMenu();
+                }
             }
         }
 
+        // Work on this more TODO
         public void OnMenuChanged(object sender, EventArgs e)
         {
             if (Game1.activeClickableMenu != null && Game1.activeClickableMenu is ShopMenu && !shopReplaced)
             {
                 ShopMenu shop = (ShopMenu)Game1.activeClickableMenu;
-                if (shop.portraitPerson.name.Equals("Jackie"))
+                if (shop.portraitPerson.name.Equals(Config.ShopNPCName))
                 {
                     shopReplaced = true;
-                    this.Monitor.Log("Displaying Updated Shop Inventory");
-                    //Game1.activeClickableMenu = new ShopMenu(shopList, 0, "Marlon");
+                    Logger.Log("Updating NPC Menu...");
                     Game1.activeClickableMenu = (IClickableMenu)new CustomBuildingsMenu();
                 }
             }
@@ -104,78 +140,32 @@ namespace StardewValleyCustomMod
         {
             shopReplaced = false;
         }
-
-        public void OnMapLoad(object sender, EventArgs e)
-        {
-            this.Monitor.Log("Loading Building Interior222");
-            Events.ApplyLocation();
-            this.Monitor.Log("Building Interior successfully loaded!222");
-        }
-
-        public static void ApplyPatches()
-        {
-            Events.ApplyLocation();
-            Events.ApplyTilesheet();
-        }
-
-        internal static void TimeCheck(object s, EventArgs e)
-        {
-            Events.ApplyLocation();
-        }
-
-        internal static void MoreEvents_WorldReady(object s, EventArgs e)
-        {
-            //if (Configs.Compound.DynamicTiles.Count > 0 || Configs.Compound.DynamicProperties.Count > 0 || Configs.Compound.DynamicWarps.Count > 0)
-                TimeEvents.DayOfMonthChanged += TimeCheck;
-            //if (Configs.Compound.SeasonalTilesheets.Count > 0)
-              //  TimeEvents.SeasonOfYearChanged += TimeEvents_SeasonOfYearChanged;
-        }
     }
 
     public class Config
     {
-        public bool debug { get; set; } = false;
-        public string shopNPCName { get; set; }
-        public CustomBuildingBlueprint[] blueprintList { get; set; }
+        public bool Debug { get; set; } = false;
+        public bool ShopAccessViaKeyPress { get; set; } = false;
+        public string ShopAccessKey { get; set; } = "P"; // Captial only? TEST
+        public string ShopNPCName { get; set; }
+        public CustomBuildingBlueprint[] BlueprintList { get; set; }
+        
 
         public Config()
         {
-            shopNPCName = "Jackie";
-            blueprintList = new CustomBuildingBlueprint[] { new CustomBuildingBlueprint() };
+            BlueprintList = new CustomBuildingBlueprint[] { new CustomBuildingBlueprint() };
         }
-    }
 
-    /*
-    public class Config
-    {
-        public bool keepDefaultsIfNotOverwritten { get; set; }
-        public bool removeTopazRing { get; set; }
-        public ItemForSale[] weaponList { get; set; }
-        public ItemForSale[] bootList { get; set; }
-        public ItemForSale[] ringList { get; set; }
-        public ItemForSale[] hatList { get; set; }
-
-        public Config()
+        public CustomBuildingBlueprint GetCustomBuildingBlueprint(String name)
         {
-            keepDefaultsIfNotOverwritten = true;
-            removeTopazRing = true;
-            weaponList = new ItemForSale[] { new ItemForSale() };
-            bootList = new ItemForSale[] { new ItemForSale() };
-            ringList = new ItemForSale[] { new ItemForSale() };
-            hatList = new ItemForSale[] { new ItemForSale() };
+            foreach(CustomBuildingBlueprint blu in BlueprintList)
+            {
+                if (blu.name.Equals(name))
+                    return blu;
+            }
+
+            StardewValleyCustomMod.Logger.Log($"Did not find custom blueprint for {name}");
+            return null;
         }
     }
-
-    public class ItemForSale
-    {
-        public int itemID { get; set; } = -1;
-        public bool isUnique { get; set; } = false;
-        public int salePrice { get; set; } = -1;
-        public int mineLevelReached { get; set; } = -1;
-        public string mailReceived { get; set; } = "";
-        public int requiredKillCount { get; set; } = 0;
-        public string[] requiredKillTypes { get; set; } = new string[] { "" };
-        public bool requiresAllDonations { get; set; } = false;
-        public int[] donatedItems { get; set; } = new int[] { -1 };
-    }*/
 }
