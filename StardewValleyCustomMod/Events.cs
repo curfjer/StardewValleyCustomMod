@@ -5,23 +5,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Entoarox.Framework;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Locations;
 using StardewValleyCustomMod.CustomBlueprints;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using StardewModdingAPI;
+using Microsoft.Xna.Framework;
 
 namespace StardewValleyCustomMod
 {
     [Serializable]
     public class PlayerSave
     {
-        public string player;
         public CustomBuilding[] buildings;
     }
 
     internal static class Events
     {
         // Load Custom Buildings
+        // TODO Need to create Save folder if dne
         internal static void Load(object s, EventArgs e)
         {
             StardewValleyCustomMod.Logger.Log("Loading custom buildings...");
@@ -29,56 +34,63 @@ namespace StardewValleyCustomMod
             StardewValleyCustomMod.Logger.Log($"Season: {Game1.currentSeason}");
 
             XmlSerializer serializer = new XmlSerializer(typeof(PlayerSave));
+            // TODO check these unknowns and understand them
             serializer.UnknownNode += new XmlNodeEventHandler(serializer_UnknownNode);
             serializer.UnknownAttribute += new XmlAttributeEventHandler(serializer_UnknownAttribute);
 
             string saveGameName = Game1.player.name + "_" + Game1.uniqueIDForThisGame;
-            string fileName = Path.Combine(StardewValleyCustomMod.ModPath, saveGameName + ".xml");
+            string fileName = Path.Combine(StardewValleyCustomMod.ModPath, "Saves", saveGameName + ".xml");
             FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
+            int count = 0;
 
-            PlayerSave playerBuildingsList = (PlayerSave)serializer.Deserialize(fs);
-
-            
-            //ApplyLocation();
-            //ApplyTilesheet();
-
-            BuildableGameLocation farm = (BuildableGameLocation)Game1.getLocationFromName("Farm");
-            foreach (CustomBuilding building in playerBuildingsList.buildings)
+            // If save exists load save
+            if (fs.Length > 0)
             {
-                StardewValleyCustomMod.Logger.Log("Loading building...");
-                building.load();//needed or no?
-                StardewValleyCustomMod.Logger.Log("Adding building to farm");
-                farm.buildings.Add(building.ConvertCustomBuildingToBuilding());
-                if (StardewValleyCustomMod.Config.Debug)
-                    StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
-            }
+                PlayerSave playerBuildingsList = (PlayerSave)serializer.Deserialize(fs);;
 
-            StardewValleyCustomMod.Logger.Log("Custom Buildings Loaded!");
+                BuildableGameLocation farm = (BuildableGameLocation)Game1.getLocationFromName("Farm");
+                foreach (CustomBuilding building in playerBuildingsList.buildings)
+                {
+                    building.load();//needed or no?
+                    farm.buildings.Add(building.ConvertCustomBuildingToBuilding());
+                    if (StardewValleyCustomMod.Config.Debug)
+                        StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
+                    count++;
+                }
+
+                StardewValleyCustomMod.Logger.Log($"{count} of {playerBuildingsList.buildings.Length} Custom Buildings Loaded!");
+            }
+            // Save does not exist, load nothing
+            else
+                StardewValleyCustomMod.Logger.Log($"No custom buildings found for {saveGameName}.");
         }
 
         // Save and Remove Custom Buildings
         internal static void Save(object s, EventArgs e)
         {
             PlayerSave playerBuildingsList = new PlayerSave();
-            playerBuildingsList.player = Game1.player.name + "_" + Game1.uniqueIDForThisGame; // Use if just one save file for all different farms
+            string fileName = Game1.player.name + "_" + Game1.uniqueIDForThisGame;
             List<Building> playerBuildings = new List<Building>();
             List<CustomBuilding> buildings = new List<CustomBuilding>();
 
-            string fileName = Path.Combine(StardewValleyCustomMod.ModPath, playerBuildingsList.player + ".xml");
+            string filePath = Path.Combine(StardewValleyCustomMod.ModPath, "Saves", fileName + ".xml");
             XmlSerializer serializer = new XmlSerializer(typeof(PlayerSave));
-            TextWriter writer = new StreamWriter(fileName);
+            TextWriter writer = new StreamWriter(filePath);
 
             StardewValleyCustomMod.Logger.Log("Creating save file...");
 
             BuildableGameLocation farm = (BuildableGameLocation)Game1.getLocationFromName("Farm");
+            CustomBuildingBlueprint currentBlu = null;
 
             // Check for custom buildings on farm
             foreach (Building building in farm.buildings)
             {
-                if (CustomBuildingCheck(building))
+                currentBlu = CustomBuildingCheck(building);
+                if (currentBlu != null)
                 {
                     buildings.Add(new CustomBuilding(building));
                     playerBuildings.Add(building);
+
                     if (StardewValleyCustomMod.Config.Debug)
                         StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the custom building list.");
                 }
@@ -96,20 +108,91 @@ namespace StardewValleyCustomMod
             playerBuildingsList.buildings = buildings.ToArray();
             serializer.Serialize(writer, playerBuildingsList);
             writer.Close();
-            StardewValleyCustomMod.Logger.Log($"Save File created for '{playerBuildingsList.player}'.");
+            StardewValleyCustomMod.Logger.Log($"Save File created for '{fileName}'.");
         }
 
-        public static bool CustomBuildingCheck(Building building)
+        internal static void LoadMods()
+        {
+            try
+            {
+                StardewValleyCustomMod.Logger.Log("Loading building mods...");
+                string baseDir = Path.Combine(StardewValleyCustomMod.ModPath, "buildingMods");
+                int count = 0;
+                Directory.CreateDirectory(baseDir);
+
+                // Check each mod pack for manifest and load its contents
+                foreach (string dir in Directory.EnumerateDirectories(baseDir))
+                {
+                    string file = Path.Combine(dir, "manifest.json");
+                    if (File.Exists(file))
+                    {
+                        try
+                        {
+                            ParseMod(file);
+                            count++;
+                        }
+                        catch (Exception err)
+                        {
+                            StardewValleyCustomMod.Logger.Log("Unable to load manifest, json is invalid:" + file);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        StardewValleyCustomMod.Logger.Log("Could not find a manifest.json in the " + dir + " directory, if this is intentional you can ignore this message", LogLevel.Warn);
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                StardewValleyCustomMod.Logger.ExitGameImmediately("A unexpected error occured while loading custom building mod manifests", err);
+            }
+        }
+
+        // Load the buildings from the modpack using its manifest
+        internal static void ParseMod(string file)
+        {
+            try
+            {
+                BuildingManifest mani = JsonConvert.DeserializeObject<BuildingManifest>(File.ReadAllText(file));
+                int count = 0;
+
+                // Loading Buildings from file
+                StardewValleyCustomMod.Logger.Log($"Loading Buildings from {mani.ModName}...");
+                foreach (CustomBuildingBlueprint blu in mani.CustomBuildingBlueprintList)
+                {
+                    blu.SetModName(mani.ModName);
+                    StardewValleyCustomMod.Config.BlueprintList.Add(blu);
+                    count++;
+
+                    if (StardewValleyCustomMod.Config.Debug)
+                        StardewValleyCustomMod.Logger.Log($"{blu.BuildingName} from {mani.ModName} added.");
+                }
+                StardewValleyCustomMod.Logger.Log($"{count} buildings were added.");
+            }
+            catch (Exception err)
+            {
+                StardewValleyCustomMod.Logger.Log(LogLevel.Error, "Unable to parse manifest.json from " + file, err);
+            }
+            
+            
+        }
+
+        // Check if given building is from a mod
+        // True: Returns the CustomBuildingBlueprint for the building
+        // False: Returns null
+        public static CustomBuildingBlueprint CustomBuildingCheck(Building building)
         {
             if (StardewValleyCustomMod.Config.Debug)
                 StardewValleyCustomMod.Logger.Log($"Checking if {building.buildingType} is a custom building.");
 
+            // Check the blueprint list for the building
             foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.Config.BlueprintList)
-                if (building.buildingType.Equals(blu.name))
-                    return true;
+                if (building.buildingType.Equals(blu.ModName + "_" + blu.BuildingName))
+                    return blu;
             if (StardewValleyCustomMod.Config.Debug)
-                StardewValleyCustomMod.Logger.Log("CustomBuildingCheck FAILED");
-            return false;
+                StardewValleyCustomMod.Logger.Log($"{building.buildingType} is not a custom building.");
+            return null;
         }
 
         private static void serializer_UnknownNode(object sender, XmlNodeEventArgs e)
@@ -122,5 +205,11 @@ namespace StardewValleyCustomMod
             System.Xml.XmlAttribute attr = e.Attr;
             StardewValleyCustomMod.Logger.Log($"Unknown Attribute: {attr.Name} - '{attr.Value}'");
         }
+    }
+
+    public class BuildingManifest
+    {
+        public String ModName;
+        public List<CustomBuildingBlueprint> CustomBuildingBlueprintList;
     }
 }

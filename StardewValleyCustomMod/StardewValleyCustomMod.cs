@@ -1,20 +1,49 @@
-﻿/*
+﻿/*Custom Farm Buildings
+ * 
+ * Current Features:
+ * * Custom Building Menu
+ * * * Inherits all of the features of the base games carpentry menu
+ * * * Tabs to display different information about the  building
+ * * * 
+ * 
+ * * Saves and loads building from its own xml file
+ * * * Users can simply remove the mod files to uninstall the mod and any farms used with this mod will still work regardless
+ * * * 
+ * 
+ * * Add own custom buildings
+ * * * Simply make a building in your image editor, convert to xnb and make your own interior for it in tIDE.
+ * * * Then put them in the corresponding folders and edit the config file to include them and any special properties you'd like them to have that the mod supports
+ * *
+ * 
  *TODO 
  * More buildings - Bath House (upgrades to increase stamina faster?)?, Arcade?, Greenhouse(upgrades? more room, diff specialties?), Aquarium (display caught fish), ???
+ * Outhouse upgrade to Bath House?
+ *  upgrade available if quantity is 1 or more, hit button to show upgraded building details? then hit select building to select which to up?
+ * Forge(blacksmith building) - process geodes upgrade stuff etc. max mining?
+ * Cave? Drill? Leads to mining?
+ * Chicken Coop
+ * Dog House? - is that a thing already or no?
+ * - Upgrade button on building in menu, click displays upgraded building info, cost tab shows you need the prior building, red if 0? etc? how does base game do upgrades?
  * Add computer object, interact for menu, select farm buildings, customBuildingsMenu is opened
- * Add config option for keypress and which key opens the menu
- * fix keypress so it works more than just once - odd....it works all the time wtf
- * Ability to have option to choose different interiors? Winery for example
- * ^^^ Exteriors as well?
- * Add Multiple Exterior bool - how? seasonal not enough?
- * Add Multiple Interior bool
- * Make list for ^^^
+ *  black screen when not in use, what should it be when in use? changes based on what you select? if in building menu then mini version of the building menu is on the screen?
+ * Ability to have option to choose different exteriors? (not the same as seasonal?)
  * Clean code
  * Birthday/Event Related textures bool???
- * add ability to adjust days of construction
- * Give custom buildings a skill level the farmer needs? ex. to build winery - farmer lvl 10, etc.
+ * Notification when a building finished? - on next day load, or mail or npc talks to you when you walk out or something?
  * 
- * Make it so users can make their own mod packs, they put their folder in "CustomBuildings" and they have a folder for Buildings and BuildingInteriors???
+ * Custom Building texture for when building the building, day 1 just the floor?, day 2 add walls?, day 3 roof? day 4 done? etc
+ * Default is games building
+ * 
+ * Custom TouchActions?
+ * 
+ * Next mod, can you fish on any tile (this way we can have custom water tiles)?
+ * 
+ * Save game does not work for multiplayer? it never syncs? maybe put a dummy building in that the mod will recognize as a key and uses it to replace with a building? will coords work as key? then you can use any building as a placeholder
+ * 
+ * multiple floors
+ *  - might already work if I just load the map
+ *  - can add up and down arrows on interior preview to cycle through floors
+ *  - building where you can go on roof or something, so you'd be on the farm but the roof of the building? building has layers maybe?
  */
 
 using System;
@@ -31,6 +60,7 @@ using Entoarox.Framework.Events;
 using StardewValleyCustomMod.Menus;
 using StardewValleyCustomMod.CustomBlueprints;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace StardewValleyCustomMod
 {
@@ -48,7 +78,7 @@ namespace StardewValleyCustomMod
 
         public override void Entry(IModHelper helper)
         {
-            Initialize(helper);
+            this.Initialize(helper);
 
             MoreEvents.BeforeSaving += Events.Save; // Remove custom buildings from the farm map and save them
             SaveEvents.AfterSave += Events.Load; // Load custom buildings from the save file
@@ -81,6 +111,8 @@ namespace StardewValleyCustomMod
             if (Config.Debug)
                 Debug = new DebugLogger(); // What is this? TEST
 
+            Events.LoadMods();
+
             try
             {
                 Logger = Monitor;
@@ -89,9 +121,6 @@ namespace StardewValleyCustomMod
             {
                 Logger.ExitGameImmediately("err",err);
             }
-
-            foreach (CustomBuildingBlueprint blu in Config.BlueprintList)
-                Logger.Log($"{blu.name} added.");
 
             try
             {
@@ -148,19 +177,23 @@ namespace StardewValleyCustomMod
         public bool ShopAccessViaKeyPress { get; set; } = false;
         public string ShopAccessKey { get; set; } = "P"; // Captial only? TEST
         public string ShopNPCName { get; set; }
-        public CustomBuildingBlueprint[] BlueprintList { get; set; }
-        
+        //public CustomBuildingBlueprint[] BlueprintList { get; set; }
+        public List<CustomBuildingBlueprint> BlueprintList;
+
 
         public Config()
         {
-            BlueprintList = new CustomBuildingBlueprint[] { new CustomBuildingBlueprint() };
+            //BlueprintList = new CustomBuildingBlueprint[] { new CustomBuildingBlueprint() };
+            BlueprintList = new List<CustomBuildingBlueprint>();
         }
 
         public CustomBuildingBlueprint GetCustomBuildingBlueprint(String name)
         {
-            foreach(CustomBuildingBlueprint blu in BlueprintList)
+            StardewValleyCustomMod.Logger.Log($"Looking for {name}");
+            foreach (CustomBuildingBlueprint blu in BlueprintList)
             {
-                if (blu.name.Equals(name))
+                StardewValleyCustomMod.Logger.Log($"Checking {blu.BuildingName}");
+                if (blu.BuildingName.Equals(name))
                     return blu;
             }
 
