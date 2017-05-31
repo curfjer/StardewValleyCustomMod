@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnimalBuilding.cs" />
     <Compile Include="CustomBuilding.cs" />
     <Compile Include="DebugLogger.cs" />
     <Compile Include="Events.cs" />

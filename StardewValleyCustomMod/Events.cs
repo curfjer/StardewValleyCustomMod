@@ -52,7 +52,9 @@ namespace StardewValleyCustomMod
                 foreach (CustomBuilding building in playerBuildingsList.buildings)
                 {
                     building.load();//needed or no?
-                    farm.buildings.Add(building.ConvertCustomBuildingToBuilding());
+                    //farm.buildings.Add(building.ConvertCustomBuildingToBuilding());
+                    farm.buildings.Add((Building)building);
+                    StardewValleyCustomMod.FarmBuildings.Add(building);
                     if (StardewValleyCustomMod.Config.Debug)
                         StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
                     count++;
@@ -80,15 +82,13 @@ namespace StardewValleyCustomMod
             StardewValleyCustomMod.Logger.Log("Creating save file...");
 
             BuildableGameLocation farm = (BuildableGameLocation)Game1.getLocationFromName("Farm");
-            CustomBuildingBlueprint currentBlu = null;
 
             // Check for custom buildings on farm
             foreach (Building building in farm.buildings)
             {
-                currentBlu = CustomBuildingCheck(building);
-                if (currentBlu != null)
+                if (building is CustomBuilding)
                 {
-                    buildings.Add(new CustomBuilding(building));
+                    buildings.Add(building as CustomBuilding);
                     playerBuildings.Add(building);
 
                     if (StardewValleyCustomMod.Config.Debug)
@@ -97,11 +97,11 @@ namespace StardewValleyCustomMod
             }
             
             // Remove buildings from the games farm building list so it does not save and try to load
-            foreach (Building building in playerBuildings)
+            foreach (CustomBuilding building in buildings)
             {
                 if (StardewValleyCustomMod.Config.Debug)
                     StardewValleyCustomMod.Logger.Log($"Removing {building.buildingType} from the building list.");
-                farm.buildings.Remove(building);
+                farm.buildings.Remove((Building) building);
             }
             
             // Save custom buildings to file
@@ -162,6 +162,7 @@ namespace StardewValleyCustomMod
                 foreach (CustomBuildingBlueprint blu in mani.CustomBuildingBlueprintList)
                 {
                     blu.SetModName(mani.ModName);
+                    blu.SetDefaults();
                     StardewValleyCustomMod.Config.BlueprintList.Add(blu);
                     count++;
 
@@ -185,11 +186,18 @@ namespace StardewValleyCustomMod
         {
             if (StardewValleyCustomMod.Config.Debug)
                 StardewValleyCustomMod.Logger.Log($"Checking if {building.buildingType} is a custom building.");
+            
 
             // Check the blueprint list for the building
             foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.Config.BlueprintList)
+            {
                 if (building.buildingType.Equals(blu.ModName + "_" + blu.BuildingName))
                     return blu;
+                if (building is CustomBuilding && (building as CustomBuilding).modName.Equals(blu.ModName))
+                    return blu;
+            }
+            
+
             if (StardewValleyCustomMod.Config.Debug)
                 StardewValleyCustomMod.Logger.Log($"{building.buildingType} is not a custom building.");
             return null;
@@ -204,6 +212,27 @@ namespace StardewValleyCustomMod
         {
             System.Xml.XmlAttribute attr = e.Attr;
             StardewValleyCustomMod.Logger.Log($"Unknown Attribute: {attr.Name} - '{attr.Value}'");
+        }
+
+        public static void DayOfMonthChanged(object s, EventArgs e)
+        {
+            foreach (CustomBuilding building in StardewValleyCustomMod.FarmBuildings)
+            {
+                building.dayUpdate(Game1.dayOfMonth);
+            }
+        }
+
+        public static void OnPostRenderEvent(object s, EventArgs e)
+        {
+            if (Game1.currentLocation != null && Game1.currentLocation.name.Equals("Farm"))
+            {
+                StardewValleyCustomMod.Logger.Log($"Drawing Farm buildings...");
+                foreach (CustomBuilding building in StardewValleyCustomMod.FarmBuildings)
+                {
+                    StardewValleyCustomMod.Logger.Log($"Drawing {building.buildingType}.");
+                    building.draw(Game1.spriteBatch);
+                }
+            }
         }
     }
 

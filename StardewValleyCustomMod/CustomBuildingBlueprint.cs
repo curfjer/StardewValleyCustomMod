@@ -25,6 +25,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
         public string FileName;
         public string BuildingName;
         public string NameOfBuildingToUpgrade;
+        public string FolderName;
 
         public List<CustomInterior> Interiors;
         public CustomInterior CurrentInterior; // Use this for selecting interior, shift through the interiors list^^^ in the menu and grab currentInterior
@@ -37,6 +38,9 @@ namespace StardewValleyCustomMod.CustomBlueprints
         public Point HumanDoorTileCoord;
         public Point AnimalDoorTileCoord;
         public int MaxOccupants;
+        public int AnimalDoorWidth;
+        public int AnimalDoorHeight;
+        public Texture2D AnimalDoorTexture;
 
         public string Description;
         public bool Magical;
@@ -76,8 +80,9 @@ namespace StardewValleyCustomMod.CustomBlueprints
             
             this.FileName = "Default";
             this.BuildingName = "Default";
-            this.ModName = "default";
+            this.ModName = "Default";
             this.NameOfBuildingToUpgrade = "";
+            this.FolderName = "Default";
 
             this.Interiors = new List<CustomInterior>();
             this.CustomTileSheets = new List<CustomTileSheets>();
@@ -87,6 +92,9 @@ namespace StardewValleyCustomMod.CustomBlueprints
             this.HumanDoorTileCoord = new Point(-1, -1);
             this.AnimalDoorTileCoord = new Point(-1, -1);
             this.MaxOccupants = 0;
+
+            this.AnimalDoorWidth = 0;
+            this.AnimalDoorHeight = 0;
 
             this.Description = "No description.";
             this.Magical = false;
@@ -209,10 +217,12 @@ namespace StardewValleyCustomMod.CustomBlueprints
         //
         public void LoadCustomBuildingBlueprint()
         {
-            this.content = new LocalizedContentManager(Game1.content.ServiceProvider, "Mods\\StardewValleyCustomMod\\buildingMods\\" + this.ModName + "\\Buildings");
+            this.content = new LocalizedContentManager(Game1.content.ServiceProvider, Path.Combine("Mods\\StardewValleyCustomMod\\buildingMods", this.ModName, this.FolderName));
             try
             {
                 this.texture = content.Load<Texture2D>(this.FileName);
+                if (this.BlueprintType.Equals("AnimalHouse"))
+                    this.AnimalDoorTexture = content.Load<Texture2D>(this.FileName + "_AnimalDoor");
                 StardewValleyCustomMod.Logger.Log($"The building blueprint for {this.BuildingName} loaded with texture!"); //DEBUG REMOVE
             }
             catch (Exception ex)
@@ -227,7 +237,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
         {
             UpdateCurrentInterior(0); // TODO Find a better spot for this
             
-            String interiorPath = Path.Combine(StardewValleyCustomMod.ModPath, "buildingMods", this.ModName, "Interiors", this.CurrentInterior.FileName);
+            String interiorPath = Path.Combine(StardewValleyCustomMod.ModPath, "buildingMods", this.ModName, this.FolderName, this.CurrentInterior.FileName);
             StardewValleyCustomMod.Logger.Log($"{interiorPath}");
             try
             {
@@ -273,10 +283,6 @@ namespace StardewValleyCustomMod.CustomBlueprints
                     Game1.locations.Add(interior);
                     StardewValleyCustomMod.Logger.Log($"Added {this.CurrentInterior.Name}");
                 }
-                
-
-                
-
                 return interior;
             }
             catch (Exception err)
@@ -318,7 +324,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
         public GameLocation LoadCustomTileSheets(GameLocation interior)
         {
             Texture2D sheet = null;
-            string filePathStart = Path.Combine(StardewValleyCustomMod.ModPath, "buildingMods", this.ModName, "Interiors");
+            string filePathStart = Path.Combine(StardewValleyCustomMod.ModPath, "buildingMods", this.ModName, this.FolderName);
             string filePath = filePathStart;
 
             foreach (CustomTileSheets tileSheet in CustomTileSheets)
@@ -380,11 +386,46 @@ namespace StardewValleyCustomMod.CustomBlueprints
                 if (building.buildingType.Equals(this.ModName + "_" + this.BuildingName))
                 {
                     buildingCount[0]++;
-                    if (building.nameOfIndoorsWithoutUnique.Equals(this.CurrentInterior.Name))
-                        buildingCount[1]++;
+                    if(this.HasInterior())
+                        if (building.nameOfIndoorsWithoutUnique.Equals(this.CurrentInterior.Name))
+                            buildingCount[1]++;
                 }
             }
             return buildingCount;
+        }
+
+        // Copies the value of one parameter to other similar parameters if they are not default value.
+        // Assumes the other parameters are of the same value.
+        public void SetDefaults()
+        {
+            if (this.FileName != "Default")
+            {
+                if (this.BuildingName == "Default")
+                    this.BuildingName = this.FileName;
+                if (this.FolderName == "Default")
+                    this.FolderName = this.FileName;
+            }else if(this.FolderName != "Default")
+            {
+                if (this.BuildingName == "Default")
+                    this.BuildingName = this.FolderName;
+                if (this.FileName == "Default")
+                    this.FileName = this.FolderName;
+            }
+            else if (this.BuildingName != "Default")
+            {
+                if (this.FolderName == "Default")
+                    this.FolderName = this.BuildingName;
+                if (this.FileName == "Default")
+                    this.FileName = this.BuildingName;
+            }
+
+            foreach (CustomInterior interior in this.Interiors)
+                interior.SetDefaults();
+
+            foreach (CustomTileSheets tiles in this.CustomTileSheets)
+                tiles.SetDefaults();
+
+            this.LoadCustomBuildingBlueprint();
         }
     }
 
@@ -399,9 +440,20 @@ namespace StardewValleyCustomMod.CustomBlueprints
 
         public CustomInterior()
         {
+            this.FileName = "Default";
+            this.Name = "Default";
+            this.Type = "Default";
             this.Seasonal = false;
             this.Farmable = true;
             this.Outdoor = false;
+        }
+
+        public void SetDefaults()
+        {
+            if (this.FileName != "Default" && this.Name == "Default")
+                this.Name = this.FileName;
+            else if (this.Name != "Default" && this.FileName == "Default")
+                    this.FileName = this.Name;
         }
     }
 
@@ -413,9 +465,17 @@ namespace StardewValleyCustomMod.CustomBlueprints
 
         public CustomTileSheets()
         {
-            this.FileName = "";
-            this.SheetID = "";
+            this.FileName = "Default";
+            this.SheetID = "Default";
             this.Seasonal = false;
+        }
+
+        public void SetDefaults()
+        {
+            if (this.FileName != "Default" && this.SheetID == "Default")
+                this.SheetID = this.FileName;
+            else if (this.SheetID != "Default" && this.FileName == "Default")
+                this.FileName = this.SheetID;
         }
     }
 }

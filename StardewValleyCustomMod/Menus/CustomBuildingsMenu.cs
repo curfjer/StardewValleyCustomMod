@@ -64,8 +64,8 @@ namespace StardewValleyCustomMod.Menus
         private ClickableTextureComponent detailsTab;
         private ClickableTextureComponent costTab;
         private ClickableTextureComponent interiorButton;
-        private Building currentBuilding;
-        private Building buildingToMove;
+        private CustomBuilding currentBuilding;
+        private Building buildingToMove; // keep building or change to custombuilding? TODO
         private string buildingDescription;
         private string buildingName;
         private int price;
@@ -82,6 +82,8 @@ namespace StardewValleyCustomMod.Menus
         private bool debug;
         private int currentTab;
         private bool interior;
+        private bool upgradeMode;
+        private Building buildingToUpgrade;// keep building or change to custombuilding? TODO
 
         public CustomBuildingsMenu()
         {
@@ -94,6 +96,7 @@ namespace StardewValleyCustomMod.Menus
             this.debug = StardewValleyCustomMod.Config.Debug;
             this.currentTab = 0;
             this.interior = false;
+            this.upgradeMode = false;
 
             this.Logger.Log("Loading Crafting Menu...");
 
@@ -158,16 +161,13 @@ namespace StardewValleyCustomMod.Menus
             this.detailsTab = new ClickableTextureComponent("Details", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder / 2, this.yPositionOnScreen + Game1.tileSize * 5 / 4 + IClickableMenu.spaceToClearTopBorder + Game1.tileSize, Game1.tileSize, Game1.tileSize), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(16, 0, 16, 16), (float)Game1.pixelZoom, false);
             this.costTab = new ClickableTextureComponent("Cost", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder / 2, this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.tileSize * 2 + IClickableMenu.spaceToClearTopBorder, Game1.tileSize, Game1.tileSize), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(0, 0, 16, 16), (float)Game1.pixelZoom, false);
             this.interiorButton = new ClickableTextureComponent("Select Interior", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width - IClickableMenu.borderWidth, this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.tileSize * 3 + Game1.pixelZoom*4 + IClickableMenu.spaceToClearTopBorder, 25 * Game1.pixelZoom, 18 * Game1.pixelZoom), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(32, 0, 25, 18), (float)Game1.pixelZoom, false);
-
-            // TODO REMOVE THIS
-            //this.DrawCoords();
         }
 
         public void setNewActiveBlueprint()
         {
             this.Logger.Log($"CurrentBlueprintIndex: {this.currentBlueprintIndex}"); // DEBUG REMOVE
             //this.currentBuilding = new Building(this.blueprints[this.currentBlueprintIndex], Vector2.Zero);
-            this.currentBuilding = this.GetBuildingFromBlueprint(this.CurrentBlueprint);
+            this.currentBuilding = new CustomBuilding(this.CurrentBlueprint, Vector2.Zero);
             this.price = this.blueprints[this.currentBlueprintIndex].MoneyRequired;
             this.ingredients.Clear();
             foreach (KeyValuePair<int, int> keyValuePair in this.blueprints[this.currentBlueprintIndex].ResourcesRequired)
@@ -178,6 +178,7 @@ namespace StardewValleyCustomMod.Menus
         }
 
         // TODO Hover over icons, text description of the icon
+        // is there some sort of texturecomponent I can use for that ^^^???
         public override void performHoverAction(int x, int y)
         {
             this.cancelButton.tryHover(x, y, 0.1f);
@@ -217,6 +218,7 @@ namespace StardewValleyCustomMod.Menus
             }
             // TODO Any hover info?
             // highlight warp tiles when hovering over them? - click to see location? click does not work on farm warp
+            // do this in draw()?
             else if (this.interior)
             {
 
@@ -481,22 +483,41 @@ namespace StardewValleyCustomMod.Menus
 
         public void UpgradeBuilding()
         {
-            Building buildingAt = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).getBuildingAt(new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize)));
-            if (buildingAt != null && this.CurrentBlueprint.BuildingName != null && buildingAt.buildingType.Split('_').GetValue(1).Equals(this.CurrentBlueprint.NameOfBuildingToUpgrade))
+            if (!this.upgradeMode)
             {
-                this.CurrentBlueprint.consumeResources();
-                buildingAt.daysUntilUpgrade = 2;
-                buildingAt.showUpgradeAnimation((GameLocation)Game1.getFarm());
-                Game1.playSound("axe");
-                DelayedAction.fadeAfterDelay(new Game1.afterFadeFunction(this.returnToCarpentryMenuAfterSuccessfulBuild), 1500);
-                this.freeze = true;
+                Building buildingAt = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).getBuildingAt(new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize)));
+                if (buildingAt != null && this.CurrentBlueprint.BuildingName != null && buildingAt.buildingType.Split('_').GetValue(1).Equals(this.CurrentBlueprint.NameOfBuildingToUpgrade))
+                {
+                    this.upgradeMode = true;
+                    this.buildingToUpgrade = buildingAt;
+                }
+                else
+                {
+                    if (buildingAt == null)
+                        return;
+                    Game1.addHUDMessage(new HUDMessage(Game1.content.LoadString("Strings\\UI:Carpenter_CantUpgrade_BuildingType"), Color.Red, 3500f));
+                }
             }
             else
             {
-                if (buildingAt == null)
-                    return;
-                Game1.addHUDMessage(new HUDMessage(Game1.content.LoadString("Strings\\UI:Carpenter_CantUpgrade_BuildingType"), Color.Red, 3500f));
+                Game1.getFarm().buildings.Remove(this.buildingToUpgrade);
+                
+                if (this.tryToBuild())
+                {
+                    this.upgradeMode = false;
+                    this.CurrentBlueprint.consumeResources();
+                    //buildingAt.daysUntilUpgrade = 2;
+                    //buildingAt.showUpgradeAnimation((GameLocation)Game1.getFarm());
+                    Game1.playSound("axe");
+                    DelayedAction.fadeAfterDelay(new Game1.afterFadeFunction(this.returnToCarpentryMenuAfterSuccessfulBuild), 1500);
+                    this.freeze = true;
+                }
+                else
+                {
+                    Game1.getFarm().buildings.Add(this.buildingToUpgrade);
+                }
             }
+            
         }
 
         public void MoveBuilding()
@@ -553,7 +574,11 @@ namespace StardewValleyCustomMod.Menus
 
         public bool tryToBuild()
         {
-            bool built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure(this.currentBuilding, new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize)), false, Game1.player);
+            bool built = false;
+            if (this.upgradeMode)
+                built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentBuilding, new Vector2(this.buildingToUpgrade.tileX, this.buildingToUpgrade.tileY), false, Game1.player);
+            else
+                built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentBuilding, new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize)), false, Game1.player);
             this.currentBuilding.performActionOnConstruction((GameLocation)(BuildableGameLocation)Game1.getLocationFromName("Farm"));
             return built;
         }
@@ -711,26 +736,53 @@ namespace StardewValleyCustomMod.Menus
                         }
                     }
                 }
+                else if (this.upgradeMode)
+                    this.DrawBuildingTiles(b, (Building)this.currentBuilding);
                 else if (this.moving && this.buildingToMove != null)
                 {
-                    Vector2 vector2 = new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize));
-                    for (int y = 0; y < this.buildingToMove.tilesHigh; ++y)
-                    {
-                        for (int x = 0; x < this.buildingToMove.tilesWide; ++x)
-                        {
-                            int structurePlacementTile = this.buildingToMove.getTileSheetIndexForStructurePlacementTile(x, y);
-                            Vector2 tileLocation = new Vector2(vector2.X + (float)x, vector2.Y + (float)y);
-                            if (!(Game1.currentLocation as BuildableGameLocation).isBuildable(tileLocation))
-                                ++structurePlacementTile;
-                            b.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, tileLocation * (float)Game1.tileSize), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(194 + structurePlacementTile * 16, 388, 16, 16)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
-                        }
-                    }
+                    this.DrawBuildingTiles(b, this.buildingToMove);
                 }
             }
             this.cancelButton.draw(b);
             this.drawMouse(b);
             if (this.hoverText.Length > 0)
                 IClickableMenu.drawHoverText(b, this.hoverText, Game1.dialogueFont, 0, 0, -1, (string)null, -1, (string[])null, (Item)null, 0, -1, -1, -1, -1, 1f, (CraftingRecipe)null);
+        }
+
+        public void DrawBuildingTiles(SpriteBatch b, Building building)
+        {
+            Vector2 vector2 = new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize));
+            
+            if (this.upgradeMode)
+            {
+                int widthDifference = this.currentBuilding.tilesWide - this.buildingToUpgrade.tilesWide;
+                int heightDifference = this.currentBuilding.tilesHigh - this.buildingToUpgrade.tilesHigh;
+
+                if (vector2.X <= this.buildingToUpgrade.tileX - widthDifference)
+                    vector2.X = this.buildingToUpgrade.tileX - widthDifference;
+                else if (vector2.X >= this.buildingToUpgrade.tileX)
+                    vector2.X = this.buildingToUpgrade.tileX;
+
+                if (vector2.Y <= this.buildingToUpgrade.tileY - heightDifference)
+                    vector2.Y = this.buildingToUpgrade.tileY - heightDifference;
+                else if (vector2.Y >= this.buildingToUpgrade.tileY)
+                    vector2.Y = this.buildingToUpgrade.tileY;
+            }
+
+            for (int y = 0; y < building.tilesHigh; ++y)
+            {
+                for (int x = 0; x < building.tilesWide; ++x)
+                {
+                    int structurePlacementTile = building.getTileSheetIndexForStructurePlacementTile(x, y);
+                    Vector2 tileLocation = new Vector2(vector2.X + (float)x, vector2.Y + (float)y);
+                    if (!(Game1.currentLocation as BuildableGameLocation).isBuildable(tileLocation))
+                        ++structurePlacementTile;
+                    if(this.buildingToUpgrade.tileX <= tileLocation.X && this.buildingToUpgrade.tileX + this.buildingToUpgrade.tilesWide - 1 >= tileLocation.X && this.buildingToUpgrade.tileY <= tileLocation.Y && this.buildingToUpgrade.tileY + this.buildingToUpgrade.tilesHigh - 1 >= tileLocation.Y)
+                        b.Draw(StardewValleyCustomMod.CustomTiles, Game1.GlobalToLocal(Game1.viewport, tileLocation * (float)Game1.tileSize), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(0, 115, 16, 16)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
+                    else
+                    b.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, tileLocation * (float)Game1.tileSize), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(194 + structurePlacementTile * 16, 388, 16, 16)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
+                }
+            }
         }
 
         // TODO add scroll function

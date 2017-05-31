@@ -26,6 +26,8 @@
  * - Upgrade button on building in menu, click displays upgraded building info, cost tab shows you need the prior building, red if 0? etc? how does base game do upgrades?
  * Add computer object, interact for menu, select farm buildings, customBuildingsMenu is opened
  *  black screen when not in use, what should it be when in use? changes based on what you select? if in building menu then mini version of the building menu is on the screen?
+ *  get from mail from parent?
+ *
  * Ability to have option to choose different exteriors? (not the same as seasonal?)
  * Clean code
  * Birthday/Event Related textures bool???
@@ -39,11 +41,32 @@
  * Next mod, can you fish on any tile (this way we can have custom water tiles)?
  * 
  * Save game does not work for multiplayer? it never syncs? maybe put a dummy building in that the mod will recognize as a key and uses it to replace with a building? will coords work as key? then you can use any building as a placeholder
+ * - parse buildingType with more information that the mod can decode and load the correct building?
+ * - objects are saved in the main file?
  * 
  * multiple floors
  *  - might already work if I just load the map
  *  - can add up and down arrows on interior preview to cycle through floors
  *  - building where you can go on roof or something, so you'd be on the farm but the roof of the building? building has layers maybe?
+ *  
+ *  winery is cutoff in menu, not sure why, greenhouse sticks out and looks good
+ *  
+ *  add prior building into cost tab for the upgrade building
+ *  
+ *  info icon - make the circle bigger, but keep i the same size
+ *  already built icon - maybe stagger houses on top of each other?
+ *  
+ *  fix upgrade
+ *  - save old building data, demo old building, build new building
+ *  - center new building on old building, check for hazards that will prevent the new building from being built
+ *   - support different sizes of different upgrades etc, bathhouse is bigger than outhouse
+ *  
+ *  fix animalhouse type building
+ *  - grab the extra methods from base game, adjust to what it needs
+ *  
+ *  I think I did this (UNTESTED) vvvv
+ *  Is there a way to set default values after retrieve information from manifest
+ *   -ex. user only sets filename, then default sets buildingname, folder name to the same as filename
  */
 
 using System;
@@ -75,6 +98,7 @@ namespace StardewValleyCustomMod
         internal static DebugLogger Debug;
         internal static LocalizedContentManager Content; // TODO framework has a localizer, can you use that instead?
         internal static Texture2D CustomTiles;
+        internal static List<CustomBuilding> FarmBuildings;
 
         public override void Entry(IModHelper helper)
         {
@@ -83,6 +107,9 @@ namespace StardewValleyCustomMod
             MoreEvents.BeforeSaving += Events.Save; // Remove custom buildings from the farm map and save them
             SaveEvents.AfterSave += Events.Load; // Load custom buildings from the save file
             SaveEvents.AfterLoad += Events.Load; // Load custom buildings from the save file
+
+            //TimeEvents.DayOfMonthChanged += Events.DayOfMonthChanged;
+            //GraphicsEvents.OnPostRenderEvent += Events.OnPostRenderEvent;
 
             // NPC Custom Building Menu Access
             MenuEvents.MenuChanged += OnMenuChanged;
@@ -98,6 +125,7 @@ namespace StardewValleyCustomMod
             Logger = Monitor;
             Content = new LocalizedContentManager(Game1.content.ServiceProvider, ModPath + "\\CustomBuildings");
             menuOpen = false;
+            FarmBuildings = new List<CustomBuilding>();
 
             Logger.Log("Loading Config...");
             Config = helper.ReadConfig<Config>();
