@@ -61,8 +61,11 @@ namespace StardewValleyCustomMod
             this.texture = blu.texture;
             
             this.maxOccupants = blu.MaxOccupants;
-            this.daysOfConstructionLeft = blu.DaysToConstruct;
-            this.daysUntilUpgrade = blu.DaysToConstruct;
+            
+            if(blu.isUpgrade())
+                this.daysUntilUpgrade = blu.DaysToConstruct;
+            else
+                this.daysOfConstructionLeft = blu.DaysToConstruct;
 
             this.humanDoor = blu.HumanDoorTileCoord;
             this.animalDoor = blu.AnimalDoorTileCoord;
@@ -120,6 +123,9 @@ namespace StardewValleyCustomMod
                 this.texture = this.Content.Load<Texture2D>(this.fileName + "_" + Game1.currentSeason);
             else
                 this.texture = this.Content.Load<Texture2D>(this.fileName);// Create a custom building then convert back to orig building         
+
+            if (this.animalHouse)
+                this.AnimalDoorTexture = this.Content.Load<Texture2D>(this.fileName + "_AnimalDoor");
 
             // Interior:
             GameLocation indoors1 = this.GetIndoors();
@@ -252,10 +258,11 @@ namespace StardewValleyCustomMod
                 //b.Draw(this.texture, new Vector2((float)x, (float)y) + new Vector2((float)this.animalDoor.X, (float)this.animalDoor.Y + 3.5f) * (float)Game1.tileSize, new Rectangle?(new Rectangle(0, 112, 16, 15)), Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, (float)((double)((this.tileY + this.tilesHigh) * Game1.tileSize) / 10000.0 - 1.0000000116861E-07));
                 //b.Draw(this.texture, new Vector2((float)x, (float)y), new Rectangle?(new Rectangle(0, 0, 96, 112)), this.color, 0.0f, new Vector2(0.0f, 0.0f), 4f, SpriteEffects.None, 0.89f);
 
-                b.Draw(this.AnimalDoorTexture, new Vector2((float)x, (float)y) + new Vector2((float)this.animalDoor.X, (float)(this.animalDoor.Y) + 1) * (float)Game1.tileSize, new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.animalDoorHeight)), Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
-                b.Draw(this.texture, new Vector2((float)x, (float)y), new Rectangle?(this.texture.Bounds), this.color, 0.0f, new Vector2(0.0f, 0.0f), 4f, SpriteEffects.None, 0.89f);
+                b.Draw(this.AnimalDoorTexture, new Vector2((float)x, (float)y) + new Vector2((float)this.animalDoor.X * (float)Game1.tileSize, ((float)this.texture.Height - this.AnimalDoorTexture.Height) * Game1.pixelZoom), new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.animalDoorHeight)), Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
+                b.Draw(this.texture, new Vector2((float)x, (float)y), new Rectangle?(this.texture.Bounds), this.color, 0.0f, new Vector2(0.0f, 0.0f), 4f, SpriteEffects.None, 0f);
                 //StardewValleyCustomMod.Logger.Log($"Drawing animal house: {this.buildingType} - {this.texture.Bounds} - { this.AnimalDoorTexture.Bounds.ToString()}");
                 //StardewValleyCustomMod.Logger.Log($"Animal Door: w-{this.animalDoorWidth} h-{this.animalDoorHeight} xy-{this.animalDoor.ToString()}");
+                //StardewValleyCustomMod.Logger.Log($"y{y} + tH{texture.Height} + aH{AnimalDoorTexture.Height} = {(float)y + this.texture.Height - this.AnimalDoorTexture.Height}");
             }
             else
                 base.drawInMenu(b, x, y);
@@ -268,7 +275,7 @@ namespace StardewValleyCustomMod
             else
             {
                 this.drawShadow(b, -1, -1);
-                b.Draw(this.AnimalDoorTexture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX + this.animalDoor.X), (float)(this.tileY + this.animalDoor.Y - 1)) * (float)Game1.tileSize), new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.animalDoorHeight)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
+                b.Draw(this.AnimalDoorTexture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX + this.animalDoor.X) * Game1.tileSize, (float)(this.texture.Height - this.AnimalDoorTexture.Height) * Game1.pixelZoom)), new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.animalDoorHeight)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
                 b.Draw(this.texture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX * Game1.tileSize), (float)(this.tileY * Game1.tileSize + this.tilesHigh * Game1.tileSize))), new Rectangle?(this.texture.Bounds), this.color * this.alpha, 0.0f, new Vector2(0.0f, 112f), 4f, SpriteEffects.None, (float)((this.tileY + this.tilesHigh) * Game1.tileSize) / 10000f);
 
                 //b.Draw(this.texture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX + this.animalDoor.X), (float)(this.tileY + this.animalDoor.Y)) * (float)Game1.tileSize), new Rectangle?(new Rectangle(16, 112, 16, 16)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 1E-06f);
