@@ -236,11 +236,11 @@ namespace StardewValleyCustomMod
             else
             {
                 // do this in the menu class, not this class
-                int menuWidth = 8 * Game1.tileSize;
+                int menuWidth = 7 * Game1.tileSize;
                 //int xCoord = this.texture.Bounds.Width * Game1.pixelZoom >= menuWidth ? x : (menuWidth - this.texture.Bounds.Width) / 2;
                 this.drawShadow(b, x, y);
                 Rectangle? textureView = new Rectangle?(this.texture.Bounds);
-                //StardewValleyCustomMod.Logger.Log($"tW: {this.texture.Bounds.Width}, z:{this.Zoom}, mW:{menuWidth}");
+                //StardewValleyCustomMod.Logger.Log($"tW: {this.texture.Bounds.Width}, z:{this.Zoom.ToString()}, mW:{menuWidth}");
                 //StardewValleyCustomMod.Logger.Log($"X: {(this.texture.Bounds.Width / 2 * this.Zoom - menuWidth) / this.Zoom}");
                 //if (this.texture.Width * this.Zoom > menuWidth)
                     //textureView = new Rectangle(Math.Abs(this.texture.Bounds.Width * this.Zoom - menuWidth) / (2 * this.Zoom), 0, menuWidth / this.Zoom > this.texture.Width ? this.texture.Width : menuWidth / this.Zoom, this.texture.Height);
@@ -270,6 +270,15 @@ namespace StardewValleyCustomMod
         {
             this.Zoom = zoom;
             this.drawInMenu(b, x, y);
+        }
+
+        public virtual void drawShadow(SpriteBatch b, int localX = -1, int localY = -1)
+        {
+            Vector2 position = localX == -1 ? Game1.GlobalToLocal(new Vector2((float)(this.tileX * Game1.tileSize), (float)((this.tileY + this.tilesHigh) * Game1.tileSize))) : new Vector2((float)localX, (float)(localY + this.getSourceRectForMenu().Height * Game1.pixelZoom));
+            b.Draw(Game1.mouseCursors, position, new Rectangle?(Building.leftShadow), Color.White * (localX == -1 ? this.alpha : 1f), 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1E-05f);
+            for (int index = 1; index < this.tilesWide - 1; ++index)
+                b.Draw(Game1.mouseCursors, position + new Vector2((float)(index * Game1.tileSize), 0.0f), new Rectangle?(Building.middleShadow), Color.White * (localX == -1 ? this.alpha : 1f), 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1E-05f);
+            b.Draw(Game1.mouseCursors, position + new Vector2((float)((this.tilesWide - 1) * Game1.tileSize), 0.0f), new Rectangle?(Building.rightShadow), Color.White * (localX == -1 ? this.alpha : 1f), 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1E-05f);
         }
 
         public override void draw(SpriteBatch b)

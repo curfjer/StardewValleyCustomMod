@@ -721,14 +721,16 @@ namespace StardewValleyCustomMod.Menus
                  * - (this.currentBuilding.texture.Bounds.Height / 2) * this.zoom
                  */
                 //this.currentBuilding.drawInMenu(b, this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - this.currentBuilding.tilesWide * Game1.tileSize / 2 - Game1.tileSize, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - this.currentBuilding.getSourceRectForMenu().Height * Game1.pixelZoom / 2, this.zoom);
-                float scalar = this.maxWidthOfBuildingViewer / this.currentBuilding.texture.Width;
+                float scalar = (float)this.maxWidthOfBuildingViewer / (float)this.currentBuilding.texture.Width;
 
                 if (this.currentBuilding.texture.Height * scalar > this.maxHeightOfBuildingViewer)
-                    scalar = this.maxHeightOfBuildingViewer / this.currentBuilding.texture.Height;
-
+                    scalar = (float)this.maxHeightOfBuildingViewer / (float)this.currentBuilding.texture.Height;
+                
                 //this.currentBuilding.drawInMenu(b, this.xPositionOnScreen - Game1.tileSize - IClickableMenu.spaceToClearSideBorder, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * this.zoom, this.zoom);
                 //else
-                    this.currentBuilding.drawInMenu(b, (int)(this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Width / 2) * scalar - Game1.tileSize), (int)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * scalar), scalar);
+                this.currentBuilding.drawInMenu(b, (int)(this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Width / 2) * scalar - Game1.tileSize), (int)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * scalar), scalar);
+
+                
 
                 // Should this be displayed with exterior only?
                 if (this.CurrentBlueprint.isUpgrade())
