@@ -30,7 +30,7 @@ namespace StardewValleyCustomMod
         public Vector2 animalDoorTileSheetCoords;
         public int animalDoorHeight;
         public int animalDoorWidth;
-        public float Zoom;
+        public float scalar;
         private Texture2D AnimalDoorTexture;
         private LocalizedContentManager Content;
 
@@ -89,7 +89,7 @@ namespace StardewValleyCustomMod
             // Extra
             this.seasonal = blu.Seasonal;
             this.magical = blu.Magical;
-            this.Zoom = 4;
+            this.scalar = 4;
         }
 
         // Create CustomBuilding from Building (base game)
@@ -221,66 +221,39 @@ namespace StardewValleyCustomMod
             return interior;
         }
 
-        // TODO fix this for custom buildings that are bigger than the menu screen, ex. the winery
-        // maybe zoom out some how?
-        // add zoom function to the pic in the menu?
         public override void drawInMenu(SpriteBatch b, int x, int y)
         {
             if (this.animalHouse)
             {
                 this.drawShadow(b, x, y);
 
-                b.Draw(this.AnimalDoorTexture, new Vector2((float)x, (float)y) + new Vector2((float)this.animalDoor.X * (float)Game1.tileSize, ((float)this.texture.Height - this.AnimalDoorTexture.Height) * Game1.pixelZoom), new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.animalDoorHeight)), Color.White, 0.0f, Vector2.Zero, this.Zoom, SpriteEffects.None, 1f);
-                b.Draw(this.texture, new Vector2((float)x, (float)y), new Rectangle?(this.texture.Bounds), this.color, 0.0f, new Vector2(0.0f, 0.0f), this.Zoom, SpriteEffects.None, 0f);
+                b.Draw(this.AnimalDoorTexture, new Vector2((float)x, (float)y) + new Vector2((float)this.animalDoor.X * (float)Game1.tileSize, ((float)this.texture.Height - this.AnimalDoorTexture.Height) * Game1.pixelZoom), new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.animalDoorHeight)), Color.White, 0.0f, Vector2.Zero, this.scalar, SpriteEffects.None, 1f);
+                b.Draw(this.texture, new Vector2((float)x, (float)y), new Rectangle?(this.texture.Bounds), this.color, 0.0f, new Vector2(0.0f, 0.0f), this.scalar, SpriteEffects.None, 0f);
             }
             else
             {
-                // do this in the menu class, not this class
-                int menuWidth = 7 * Game1.tileSize;
-                //int xCoord = this.texture.Bounds.Width * Game1.pixelZoom >= menuWidth ? x : (menuWidth - this.texture.Bounds.Width) / 2;
                 this.drawShadow(b, x, y);
-                Rectangle? textureView = new Rectangle?(this.texture.Bounds);
-                //StardewValleyCustomMod.Logger.Log($"tW: {this.texture.Bounds.Width}, z:{this.Zoom.ToString()}, mW:{menuWidth}");
-                //StardewValleyCustomMod.Logger.Log($"X: {(this.texture.Bounds.Width / 2 * this.Zoom - menuWidth) / this.Zoom}");
-                //if (this.texture.Width * this.Zoom > menuWidth)
-                    //textureView = new Rectangle(Math.Abs(this.texture.Bounds.Width * this.Zoom - menuWidth) / (2 * this.Zoom), 0, menuWidth / this.Zoom > this.texture.Width ? this.texture.Width : menuWidth / this.Zoom, this.texture.Height);
-                /*  width = this.texture.Bounds.Width / 2 * this.Zoom - 8 * Game1.tileSize, 8 * Game1.tileSize
-                 * 
-                 * 
-                 */
-                b.Draw(this.texture, new Vector2((float)x, (float)y), textureView, this.color, 0.0f, new Vector2(0.0f, 0.0f), (float)this.Zoom, SpriteEffects.None, 0.89f);
+                b.Draw(this.texture, new Vector2((float)x, (float)y), this.texture.Bounds, this.color, 0.0f, new Vector2(0.0f, 0.0f), (float)this.scalar, SpriteEffects.None, 0.89f);
             }
-                //base.drawInMenu(b, x, y);
         }
-        /*
-         *  if (this.tilesWide <= 8)
-            {
-                this.drawShadow(b, x, y);
-                b.Draw(this.texture, new Vector2((float) x, (float) y), new Rectangle?(this.texture.Bounds), this.color, 0.0f, new Vector2(0.0f, 0.0f), (float) Game1.pixelZoom, SpriteEffects.None, 0.89f);
-            }
-            else
-            {
-                int num1 = Game1.tileSize + 11 * Game1.pixelZoom;
-                int num2 = Game1.tileSize / 2 - Game1.pixelZoom;
-                b.Draw(this.texture, new Vector2((float) (x + num1), (float) (y + num2)), new Rectangle?(new Rectangle(this.texture.Bounds.Center.X - 64, this.texture.Bounds.Bottom - 136 - 2, 122, 138)), this.color, 0.0f, new Vector2(0.0f, 0.0f), (float) Game1.pixelZoom, SpriteEffects.None, 0.89f);
-            } 
-         */
 
-        public void drawInMenu(SpriteBatch b, int x, int y, float zoom)
+        // Scales the building to fit in menu
+        public void drawInMenu(SpriteBatch b, int x, int y, float scalar)
         {
-            this.Zoom = zoom;
+            this.scalar = scalar;
             this.drawInMenu(b, x, y);
         }
 
+        //
         public override void drawShadow(SpriteBatch b, int localX = -1, int localY = -1)
         {
-            Vector2 position = localX == -1 ? Game1.GlobalToLocal(new Vector2((float)(this.tileX * Game1.tileSize), (float)((this.tileY + this.tilesHigh) * Game1.tileSize))) : new Vector2((float)localX, (float)(localY + this.texture.Height * this.Zoom));
+            Vector2 position = localX == -1 ? Game1.GlobalToLocal(new Vector2((float)(this.tileX * Game1.tileSize), (float)((this.tileY + this.tilesHigh) * Game1.tileSize))) : new Vector2((float)localX, (float)(localY + this.texture.Height * this.scalar));
             if (localY != -1)
             {
-                b.Draw(Game1.mouseCursors, position, new Rectangle?(Building.leftShadow), Color.White * (localX == -1 ? this.alpha : 1f), 0.0f, Vector2.Zero, (float)this.Zoom, SpriteEffects.None, 1E-05f);
+                b.Draw(Game1.mouseCursors, position, new Rectangle?(Building.leftShadow), Color.White * (localX == -1 ? this.alpha : 1f), 0.0f, Vector2.Zero, (float)this.scalar, SpriteEffects.None, 1E-05f);
                 for (int index = 1; index < this.tilesWide - 1; ++index)
-                    b.Draw(Game1.mouseCursors, position + new Vector2((float)(index * Game1.tileSize / 4 * this.Zoom), 0.0f), new Rectangle?(Building.middleShadow), Color.White * (localX == -1 ? this.alpha : 1f), 0.0f, Vector2.Zero, (float)this.Zoom, SpriteEffects.None, 1E-05f);
-                b.Draw(Game1.mouseCursors, position + new Vector2((float)((this.tilesWide - 1) * Game1.tileSize / 4 * this.Zoom), 0.0f), new Rectangle?(Building.rightShadow), Color.White * (localX == -1 ? this.alpha : 1f), 0.0f, Vector2.Zero, (float)this.Zoom, SpriteEffects.None, 1E-05f);
+                    b.Draw(Game1.mouseCursors, position + new Vector2((float)(index * Game1.tileSize / 4 * this.scalar), 0.0f), new Rectangle?(Building.middleShadow), Color.White * (localX == -1 ? this.alpha : 1f), 0.0f, Vector2.Zero, (float)this.scalar, SpriteEffects.None, 1E-05f);
+                b.Draw(Game1.mouseCursors, position + new Vector2((float)((this.tilesWide - 1) * Game1.tileSize / 4 * this.scalar), 0.0f), new Rectangle?(Building.rightShadow), Color.White * (localX == -1 ? this.alpha : 1f), 0.0f, Vector2.Zero, (float)this.scalar, SpriteEffects.None, 1E-05f);
             }
             else
             {

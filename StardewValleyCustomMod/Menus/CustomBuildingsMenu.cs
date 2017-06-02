@@ -722,16 +722,22 @@ namespace StardewValleyCustomMod.Menus
                  */
                 //this.currentBuilding.drawInMenu(b, this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - this.currentBuilding.tilesWide * Game1.tileSize / 2 - Game1.tileSize, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - this.currentBuilding.getSourceRectForMenu().Height * Game1.pixelZoom / 2, this.zoom);
                 float scalar = (float)this.maxWidthOfBuildingViewer / (float)this.currentBuilding.texture.Width;
+                int shadowHeight = 16;
 
-                if (this.currentBuilding.texture.Height * scalar > this.maxHeightOfBuildingViewer)
-                    scalar = (float)this.maxHeightOfBuildingViewer / (float)this.currentBuilding.texture.Height;
+                if ((this.currentBuilding.texture.Height + shadowHeight)* scalar > this.maxHeightOfBuildingViewer)
+                    scalar = (float)this.maxHeightOfBuildingViewer / (float)(this.currentBuilding.texture.Height + shadowHeight);
                 
                 //this.currentBuilding.drawInMenu(b, this.xPositionOnScreen - Game1.tileSize - IClickableMenu.spaceToClearSideBorder, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * this.zoom, this.zoom);
                 //else
                 this.currentBuilding.drawInMenu(b, (int)(this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Width / 2) * scalar - Game1.tileSize), (int)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * scalar), scalar);
 
-                
+                // Draw Farmer scaled to building TODO
+                StardewValley.Farmer farmer = Game1.player;
+                //farmer.FarmerRenderer.draw(b, farmer.FarmerSprite.CurrentAnimationFrame, farmer.FarmerSprite.CurrentFrame, farmer.FarmerSprite.sourceRect, new Vector2(this.xPositionOnScreen - Game1.tileSize * 3 / 2, this.yPositionOnScreen + this.maxHeightOfBuildingViewer - Game1.tileSize * 4), Vector2.Zero, 1f, Color.White, 0.0f, scalar, farmer);
+                farmer.FarmerRenderer.draw(b, new FarmerSprite.AnimationFrame(0, 0, false, false, (AnimatedSprite.endOfAnimationBehavior)null, false), 0, new Microsoft.Xna.Framework.Rectangle(0, 0, 16, 32), new Vector2((float)(this.xPositionOnScreen - Game1.tileSize * 5 / 4), (float)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer - Game1.tileSize * 2 * scalar / Game1.pixelZoom)), Vector2.Zero, 0.8f, 2, Color.White, 0.0f, (float)scalar / Game1.pixelZoom, farmer);
+                //public void draw(SpriteBatch b, FarmerSprite.AnimationFrame animationFrame, int currentFrame, Rectangle sourceRect, Vector2 position, Vector2 origin, float layerDepth, Color overrideColor, float rotation, float scale, Farmer who)
 
+                //
                 // Should this be displayed with exterior only?
                 if (this.CurrentBlueprint.isUpgrade())
                     this.upgradeIcon.draw(b);
@@ -754,25 +760,17 @@ namespace StardewValleyCustomMod.Menus
                 this.okButton.draw(b, this.blueprints[this.currentBlueprintIndex].doesFarmerHaveEnoughResourcesToBuild() ? Color.White : Color.Gray * 0.8f, 0.88f);
                 this.demolishButton.draw(b);
                 this.moveButton.draw(b);
-                this.zoomIn.draw(b);
-                this.zoomOut.draw(b);
+                //this.zoomIn.draw(b);
+                //this.zoomOut.draw(b);
                 this.descriptionTab.draw(b);
                 this.detailsTab.draw(b);
                 this.costTab.draw(b);
                 if(this.CurrentBlueprint.HasInterior())
                     this.interiorButton.draw(b);
 
-                //b.Draw(StardewValleyCustomMod.CustomTiles, Game1.GlobalToLocal(Game1.viewport, new Vector2(this.xPositionOnScreen, this.maxHeightOfBuildingViewer / 2 - 38 / 2 * Game1.pixelZoom)), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(150, 67, 10, 38)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
-                b.Draw(StardewValleyCustomMod.CustomTiles, new Vector2(this.xPositionOnScreen - Game1.tileSize * 5 / 2, Game1.viewport.Height / 2 - 38 / 2 * Game1.pixelZoom), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(150, 67, 10, 38)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
-                // 4: 148, 69   3: 148, 78  2: 148, 87  1: 148, 96
-                // x is 2 pixels to the left, x - 2
-                // y is 2 pixels lower than top, y - 2
-                //  and increments by 9, y - 2 - 9 * zoom
-                // zoom does not go to 0 so need an initial amount added
-                //  y - 2 - 9 * zoom - 9
-                // needs to be scaled by pixelzoom
-                //b.Draw(StardewValleyCustomMod.CustomTiles, Game1.GlobalToLocal(Game1.viewport, new Vector2(0, this.maxHeightOfBuildingViewer / 2 - 38 / 2 * Game1.pixelZoom)), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(139, 67, 10, 7)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
-                b.Draw(StardewValleyCustomMod.CustomTiles, new Vector2(this.xPositionOnScreen - Game1.tileSize * 5 / 2 - Game1.pixelZoom, Game1.viewport.Height / 2 + (-38 / 2 + 9 * (4 - this.zoom) + 2) * Game1.pixelZoom), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(139, 67, 10, 7)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
+                
+                //b.Draw(StardewValleyCustomMod.CustomTiles, new Vector2(this.xPositionOnScreen - Game1.tileSize * 5 / 2, Game1.viewport.Height / 2 - 38 / 2 * Game1.pixelZoom), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(150, 67, 10, 38)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
+                //b.Draw(StardewValleyCustomMod.CustomTiles, new Vector2(this.xPositionOnScreen - Game1.tileSize * 5 / 2 - Game1.pixelZoom, Game1.viewport.Height / 2 + (-38 / 2 + 9 * (4 - this.zoom) + 2) * Game1.pixelZoom), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(139, 67, 10, 7)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
             }
             // Draw Interior Selection Screen:
             else if (this.interior)
