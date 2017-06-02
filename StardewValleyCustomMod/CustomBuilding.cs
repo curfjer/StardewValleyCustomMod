@@ -30,7 +30,7 @@ namespace StardewValleyCustomMod
         public Vector2 animalDoorTileSheetCoords;
         public int animalDoorHeight;
         public int animalDoorWidth;
-        public int Zoom;
+        public float Zoom;
         private Texture2D AnimalDoorTexture;
         private LocalizedContentManager Content;
 
@@ -242,8 +242,8 @@ namespace StardewValleyCustomMod
                 Rectangle? textureView = new Rectangle?(this.texture.Bounds);
                 //StardewValleyCustomMod.Logger.Log($"tW: {this.texture.Bounds.Width}, z:{this.Zoom}, mW:{menuWidth}");
                 //StardewValleyCustomMod.Logger.Log($"X: {(this.texture.Bounds.Width / 2 * this.Zoom - menuWidth) / this.Zoom}");
-                if (this.texture.Width * this.Zoom > menuWidth)
-                    textureView = new Rectangle(Math.Abs(this.texture.Bounds.Width * this.Zoom - menuWidth) / (2 * this.Zoom), 0, menuWidth / this.Zoom > this.texture.Width ? this.texture.Width : menuWidth / this.Zoom, this.texture.Height);
+                //if (this.texture.Width * this.Zoom > menuWidth)
+                    //textureView = new Rectangle(Math.Abs(this.texture.Bounds.Width * this.Zoom - menuWidth) / (2 * this.Zoom), 0, menuWidth / this.Zoom > this.texture.Width ? this.texture.Width : menuWidth / this.Zoom, this.texture.Height);
                 /*  width = this.texture.Bounds.Width / 2 * this.Zoom - 8 * Game1.tileSize, 8 * Game1.tileSize
                  * 
                  * 
@@ -266,7 +266,7 @@ namespace StardewValleyCustomMod
             } 
          */
 
-        public void drawInMenu(SpriteBatch b, int x, int y, int zoom)
+        public void drawInMenu(SpriteBatch b, int x, int y, float zoom)
         {
             this.Zoom = zoom;
             this.drawInMenu(b, x, y);

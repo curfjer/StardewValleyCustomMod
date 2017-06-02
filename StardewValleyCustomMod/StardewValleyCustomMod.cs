@@ -59,6 +59,10 @@
  *  I think I did this (UNTESTED) vvvv
  *  Is there a way to set default values after retrieve information from manifest
  *   -ex. user only sets filename, then default sets buildingname, folder name to the same as filename
+ *   
+ *   different textures for night - mainly for different lighting purposes? default might be good enough
+ *   
+ *   blue tiles for upgrade - needs to have a door and animal door version because if the upgrade tile is the same spot as the door, the door is not displayed until built
  */
 
 using System;
