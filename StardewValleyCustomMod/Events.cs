@@ -88,6 +88,7 @@ namespace StardewValleyCustomMod
             {
                 if (building is CustomBuilding)
                 {
+                    StardewValleyCustomMod.Logger.Log($"AD-Height:{(building as CustomBuilding).animalDoorHeight}");
                     buildings.Add(building as CustomBuilding);
                     playerBuildings.Add(building);
 
@@ -212,27 +213,6 @@ namespace StardewValleyCustomMod
         {
             System.Xml.XmlAttribute attr = e.Attr;
             StardewValleyCustomMod.Logger.Log($"Unknown Attribute: {attr.Name} - '{attr.Value}'");
-        }
-
-        public static void DayOfMonthChanged(object s, EventArgs e)
-        {
-            foreach (CustomBuilding building in StardewValleyCustomMod.FarmBuildings)
-            {
-                building.dayUpdate(Game1.dayOfMonth);
-            }
-        }
-
-        public static void OnPostRenderEvent(object s, EventArgs e)
-        {
-            if (Game1.currentLocation != null && Game1.currentLocation.name.Equals("Farm"))
-            {
-                StardewValleyCustomMod.Logger.Log($"Drawing Farm buildings...");
-                foreach (CustomBuilding building in StardewValleyCustomMod.FarmBuildings)
-                {
-                    StardewValleyCustomMod.Logger.Log($"Drawing {building.buildingType}.");
-                    building.draw(Game1.spriteBatch);
-                }
-            }
         }
     }
 

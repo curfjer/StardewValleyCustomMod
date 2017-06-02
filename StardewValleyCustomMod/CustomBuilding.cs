@@ -24,12 +24,13 @@ namespace StardewValleyCustomMod
         public string folderName;
         public bool animalHouse;
         public static int openAnimalDoorPosition = -Game1.tileSize + Game1.pixelZoom * 3;
-        private const int closedAnimalDoorPosition = 0;
-        private int yPositionOfAnimalDoor;
-        private int animalDoorMotion;
-        private Vector2 animalDoorTileSheetCoords;
-        private int animalDoorHeight;
-        private int animalDoorWidth;
+        public const int closedAnimalDoorPosition = 0;
+        public int yPositionOfAnimalDoor;
+        public int animalDoorMotion;
+        public Vector2 animalDoorTileSheetCoords;
+        public int animalDoorHeight;
+        public int animalDoorWidth;
+        public int Zoom;
         private Texture2D AnimalDoorTexture;
         private LocalizedContentManager Content;
 
@@ -38,18 +39,24 @@ namespace StardewValleyCustomMod
 
         }
 
-        public CustomBuilding(CustomBuildingBlueprint blu, Vector2 coord)// , Vector???? TODO
+        // Create CustomBuilding from a blueprint and the location for the building
+        public CustomBuilding(CustomBuildingBlueprint blu, Vector2 coord)
         {
+            // Names
             this.modName = blu.ModName;
             this.fileName = blu.FileName;
             this.folderName = blu.FolderName;
 
+            // Building Info
             this.buildingType = blu.BuildingName;
             this.tileX = (int)coord.X;
             this.tileY = (int)coord.Y;
             this.tilesWide = blu.TilesWidth;
             this.tilesHigh = blu.TilesHeight;
+            this.texture = blu.texture;
+            this.maxOccupants = blu.MaxOccupants;
 
+            // Interior
             if (blu.HasInterior())
             {
                 this.indoors = blu.GetIndoors();
@@ -57,16 +64,14 @@ namespace StardewValleyCustomMod
                 this.baseNameOfIndoors = blu.CurrentInterior.Name;
                 this.nameOfIndoorsWithoutUnique = blu.CurrentInterior.Name;
             }
-                
-            this.texture = blu.texture;
             
-            this.maxOccupants = blu.MaxOccupants;
-            
+            // Upgrade
             if(blu.isUpgrade())
                 this.daysUntilUpgrade = blu.DaysToConstruct;
             else
                 this.daysOfConstructionLeft = blu.DaysToConstruct;
 
+            // Doors
             this.humanDoor = blu.HumanDoorTileCoord;
             this.animalDoor = blu.AnimalDoorTileCoord;
             this.animalDoorOpen = false;
@@ -75,13 +80,16 @@ namespace StardewValleyCustomMod
             this.animalDoorHeight = blu.AnimalDoorHeight;
             this.AnimalDoorTexture = blu.AnimalDoorTexture;
 
+            // AnimalHouse
             if (blu.BlueprintType.Equals("AnimalHouse"))
                 this.animalHouse = true;
             else
                 this.animalHouse = false;
 
+            // Extra
             this.seasonal = blu.Seasonal;
             this.magical = blu.Magical;
+            this.Zoom = 4;
         }
 
         // Create CustomBuilding from Building (base game)
@@ -112,60 +120,66 @@ namespace StardewValleyCustomMod
             this.owner = building.owner;
         }
 
-        // Load the custom building into memory
+        // Load the custom building and its interior into memory
         public override void load()
         {
             string buildingPath = Path.Combine("Mods\\StardewValleyCustomMod", "buildingMods", this.modName, this.folderName);
             this.Content = new LocalizedContentManager(Game1.content.ServiceProvider, buildingPath);
-            //this.GetInfoFromBlueprint();
 
+            // Load Building
             if (this.seasonal)
                 this.texture = this.Content.Load<Texture2D>(this.fileName + "_" + Game1.currentSeason);
             else
                 this.texture = this.Content.Load<Texture2D>(this.fileName);// Create a custom building then convert back to orig building         
 
+            // Load Animal Door
             if (this.animalHouse)
                 this.AnimalDoorTexture = this.Content.Load<Texture2D>(this.fileName + "_AnimalDoor");
+                
 
             // Interior:
             GameLocation indoors1 = this.GetIndoors();
-            if (indoors1 == null)
-                return;
-            indoors1.characters = this.indoors.characters;
-            indoors1.objects = this.indoors.objects;
-            indoors1.terrainFeatures = this.indoors.terrainFeatures;
-            indoors1.isStructure = true;
-            indoors1.uniqueName = indoors1.name + (object)(this.tileX * 2000 + this.tileY);
-            indoors1.numberOfSpawnedObjectsOnMap = this.indoors.numberOfSpawnedObjectsOnMap;
-            if (this.indoors.GetType().Equals(typeof(AnimalHouse)))
+            if (indoors1 != null)
             {
-                this.animalHouse = true;
-                ((AnimalHouse)indoors1).animals = ((AnimalHouse)this.indoors).animals;
-                ((AnimalHouse)indoors1).animalsThatLiveHere = ((AnimalHouse)this.indoors).animalsThatLiveHere;
-                foreach (KeyValuePair<long, FarmAnimal> animal in (Dictionary<long, FarmAnimal>)((AnimalHouse)indoors1).animals)
-                    animal.Value.reload();
-            }
-            if (this.indoors is Shed)
-            {
-                ((DecoratableLocation)indoors1).furniture = ((DecoratableLocation)this.indoors).furniture;
-                foreach (Furniture furniture in ((DecoratableLocation)indoors1).furniture)
-                    furniture.updateDrawPosition();
-                ((DecoratableLocation)indoors1).wallPaper = ((DecoratableLocation)this.indoors).wallPaper;
-                ((DecoratableLocation)indoors1).floor = ((DecoratableLocation)this.indoors).floor;
-            }
-            this.indoors = indoors1;
+                indoors1.characters = this.indoors.characters;
+                indoors1.objects = this.indoors.objects;
+                indoors1.terrainFeatures = this.indoors.terrainFeatures;
+                indoors1.isStructure = true;
+                indoors1.uniqueName = indoors1.name + (object)(this.tileX * 2000 + this.tileY);
+                indoors1.numberOfSpawnedObjectsOnMap = this.indoors.numberOfSpawnedObjectsOnMap;
 
-            // Other:
-            if (this.indoors.IsFarm && this.indoors.terrainFeatures == null)
-                this.indoors.terrainFeatures = new SerializableDictionary<Vector2, TerrainFeature>();
-            foreach (NPC character in this.indoors.characters)
-                character.reloadSprite();
-            foreach (TerrainFeature terrainFeature in this.indoors.terrainFeatures.Values)
-                terrainFeature.loadSprite();
-            foreach (KeyValuePair<Vector2, StardewValley.Object> keyValuePair in (Dictionary<Vector2, StardewValley.Object>)this.indoors.objects)
-            {
-                keyValuePair.Value.initializeLightSource(keyValuePair.Key);
-                keyValuePair.Value.reloadSprite();
+                // Load Animals
+                if (this.indoors.GetType().Equals(typeof(AnimalHouse)))
+                {
+                    ((AnimalHouse)indoors1).animals = ((AnimalHouse)this.indoors).animals;
+                    ((AnimalHouse)indoors1).animalsThatLiveHere = ((AnimalHouse)this.indoors).animalsThatLiveHere;
+                    foreach (KeyValuePair<long, FarmAnimal> animal in (Dictionary<long, FarmAnimal>)((AnimalHouse)indoors1).animals)
+                        animal.Value.reload();
+                }
+
+                // TODO change this???
+                if (this.indoors is Shed)
+                {
+                    ((DecoratableLocation)indoors1).furniture = ((DecoratableLocation)this.indoors).furniture;
+                    foreach (Furniture furniture in ((DecoratableLocation)indoors1).furniture)
+                        furniture.updateDrawPosition();
+                    ((DecoratableLocation)indoors1).wallPaper = ((DecoratableLocation)this.indoors).wallPaper;
+                    ((DecoratableLocation)indoors1).floor = ((DecoratableLocation)this.indoors).floor;
+                }
+                this.indoors = indoors1;
+
+                // Other:
+                if (this.indoors.IsFarm && this.indoors.terrainFeatures == null)
+                    this.indoors.terrainFeatures = new SerializableDictionary<Vector2, TerrainFeature>();
+                foreach (NPC character in this.indoors.characters)
+                    character.reloadSprite();
+                foreach (TerrainFeature terrainFeature in this.indoors.terrainFeatures.Values)
+                    terrainFeature.loadSprite();
+                foreach (KeyValuePair<Vector2, StardewValley.Object> keyValuePair in (Dictionary<Vector2, StardewValley.Object>)this.indoors.objects)
+                {
+                    keyValuePair.Value.initializeLightSource(keyValuePair.Key);
+                    keyValuePair.Value.reloadSprite();
+                }
             }
         }
 
@@ -181,8 +195,7 @@ namespace StardewValleyCustomMod
                 if (blu.BuildingName.Equals(this.buildingType) && blu.Interiors.Count > 0)
                 {
                     interior = blu.GetIndoors();
-
-                    //Should I do all of this in blu.GetIndoors()????? - warps, animal house stuff?
+                    
                     // Set warps for interior:
                     foreach (Warp warp in interior.warps)
                     {
@@ -192,6 +205,7 @@ namespace StardewValleyCustomMod
                         warp.TargetY = num2;
                     }
                     
+                    // TODO is this needed?
                     if(this.animalHouse)
                         if (this.animalDoorOpen)
                             this.yPositionOfAnimalDoor = CustomBuilding.openAnimalDoorPosition;
@@ -201,49 +215,10 @@ namespace StardewValleyCustomMod
                     return interior;
                 }
             }
-            //StardewValleyCustomMod.Logger.ExitGameImmediately($"{this.nameOfIndoorsWithoutUnique} not found for {this.buildingType} from {this.modName}");
 
             // Building interior not found, interior is null
             StardewValleyCustomMod.Logger.Log($"{this.nameOfIndoorsWithoutUnique} not found for {this.buildingType} from {this.modName}");
             return interior;
-        }
-
-        // Returns Building with the CustomBuilding values
-        public Building ConvertCustomBuildingToBuilding()
-        {
-            Building building = new Building();
-
-            building.color = this.color;
-            building.indoors = this.indoors;
-            building.texture = this.texture;
-            building.tileX = this.tileX;
-            building.tileY = this.tileY;
-            building.tilesWide = this.tilesWide;
-            building.tilesHigh = this.tilesHigh;
-            building.maxOccupants = this.maxOccupants;
-            building.currentOccupants = this.currentOccupants;
-            building.daysOfConstructionLeft = this.daysOfConstructionLeft;
-            building.daysUntilUpgrade = this.daysUntilUpgrade;
-            building.buildingType = this.modName + "_" + this.buildingType;
-            //building.buildingType = this.buildingType;
-            building.nameOfIndoors = this.nameOfIndoors;
-            building.baseNameOfIndoors = this.baseNameOfIndoors;
-            building.nameOfIndoorsWithoutUnique = this.nameOfIndoorsWithoutUnique;
-            building.humanDoor = this.humanDoor;
-            building.animalDoor = this.animalDoor;
-            building.animalDoorOpen = this.animalDoorOpen;
-            building.magical = this.magical;
-            building.owner = this.owner;
-
-            return building;
-        }
-
-        // Get information from custom blueprint that building does not store
-        public void GetInfoFromBlueprint()
-        {
-            CustomBuildingBlueprint blu = StardewValleyCustomMod.Config.GetCustomBuildingBlueprint(this.buildingType);
-            this.seasonal = blu.Seasonal;
-            this.fileName = blu.FileName;
         }
 
         // TODO fix this for custom buildings that are bigger than the menu screen, ex. the winery
@@ -254,37 +229,28 @@ namespace StardewValleyCustomMod
             if (this.animalHouse)
             {
                 this.drawShadow(b, x, y);
-                //b.Draw(this.texture, new Vector2((float)x, (float)y) + new Vector2((float)this.animalDoor.X, (float)(this.animalDoor.Y + 4)) * (float)Game1.tileSize, new Rectangle?(new Rectangle(16, 112, 16, 16)), Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 1E-06f);
-                //b.Draw(this.texture, new Vector2((float)x, (float)y) + new Vector2((float)this.animalDoor.X, (float)this.animalDoor.Y + 3.5f) * (float)Game1.tileSize, new Rectangle?(new Rectangle(0, 112, 16, 15)), Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, (float)((double)((this.tileY + this.tilesHigh) * Game1.tileSize) / 10000.0 - 1.0000000116861E-07));
-                //b.Draw(this.texture, new Vector2((float)x, (float)y), new Rectangle?(new Rectangle(0, 0, 96, 112)), this.color, 0.0f, new Vector2(0.0f, 0.0f), 4f, SpriteEffects.None, 0.89f);
 
-                b.Draw(this.AnimalDoorTexture, new Vector2((float)x, (float)y) + new Vector2((float)this.animalDoor.X * (float)Game1.tileSize, ((float)this.texture.Height - this.AnimalDoorTexture.Height) * Game1.pixelZoom), new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.animalDoorHeight)), Color.White, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
-                b.Draw(this.texture, new Vector2((float)x, (float)y), new Rectangle?(this.texture.Bounds), this.color, 0.0f, new Vector2(0.0f, 0.0f), 4f, SpriteEffects.None, 0f);
-                //StardewValleyCustomMod.Logger.Log($"Drawing animal house: {this.buildingType} - {this.texture.Bounds} - { this.AnimalDoorTexture.Bounds.ToString()}");
-                //StardewValleyCustomMod.Logger.Log($"Animal Door: w-{this.animalDoorWidth} h-{this.animalDoorHeight} xy-{this.animalDoor.ToString()}");
-                //StardewValleyCustomMod.Logger.Log($"y{y} + tH{texture.Height} + aH{AnimalDoorTexture.Height} = {(float)y + this.texture.Height - this.AnimalDoorTexture.Height}");
+                b.Draw(this.AnimalDoorTexture, new Vector2((float)x, (float)y) + new Vector2((float)this.animalDoor.X * (float)Game1.tileSize, ((float)this.texture.Height - this.AnimalDoorTexture.Height) * Game1.pixelZoom), new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.animalDoorHeight)), Color.White, 0.0f, Vector2.Zero, this.Zoom, SpriteEffects.None, 1f);
+                b.Draw(this.texture, new Vector2((float)x, (float)y), new Rectangle?(this.texture.Bounds), this.color, 0.0f, new Vector2(0.0f, 0.0f), this.Zoom, SpriteEffects.None, 0f);
             }
-            else
-                base.drawInMenu(b, x, y);
-        }
-
-        public override void draw(SpriteBatch b)
-        {
-            if(!this.animalHouse)
-                base.draw(b);
             else
             {
-                this.drawShadow(b, -1, -1);
-                b.Draw(this.AnimalDoorTexture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX + this.animalDoor.X) * Game1.tileSize, (float)(this.texture.Height - this.AnimalDoorTexture.Height) * Game1.pixelZoom)), new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.animalDoorHeight)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
-                b.Draw(this.texture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX * Game1.tileSize), (float)(this.tileY * Game1.tileSize + this.tilesHigh * Game1.tileSize))), new Rectangle?(this.texture.Bounds), this.color * this.alpha, 0.0f, new Vector2(0.0f, 112f), 4f, SpriteEffects.None, (float)((this.tileY + this.tilesHigh) * Game1.tileSize) / 10000f);
-
-                //b.Draw(this.texture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX + this.animalDoor.X), (float)(this.tileY + this.animalDoor.Y)) * (float)Game1.tileSize), new Rectangle?(new Rectangle(16, 112, 16, 16)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 1E-06f);
-                //b.Draw(this.texture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)((this.tileX + this.animalDoor.X) * Game1.tileSize), (float)((this.tileY + this.animalDoor.Y) * Game1.tileSize + this.yPositionOfAnimalDoor))), new Rectangle?(new Rectangle(0, 112, 16, 16)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, (float)((double)((this.tileY + this.tilesHigh) * Game1.tileSize) / 10000.0 - 1.0000000116861E-07));
-                //b.Draw(this.texture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX * Game1.tileSize), (float)(this.tileY * Game1.tileSize + this.tilesHigh * Game1.tileSize))), new Rectangle?(new Rectangle(0, 0, 96, 112)), this.color * this.alpha, 0.0f, new Vector2(0.0f, 112f), 4f, SpriteEffects.None, (float)((this.tileY + this.tilesHigh) * Game1.tileSize) / 10000f);
-
-                if (this.daysUntilUpgrade > 0)
-                    b.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, this.getUpgradeSignLocation()), new Rectangle?(new Rectangle(367, 309, 16, 15)), Color.White * this.alpha, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, (float)((double)((this.tileY + this.tilesHigh) * Game1.tileSize) / 10000.0 + 9.99999974737875E-05));
+                // do this in the menu class, not this class
+                int menuWidth = 8 * Game1.tileSize;
+                //int xCoord = this.texture.Bounds.Width * Game1.pixelZoom >= menuWidth ? x : (menuWidth - this.texture.Bounds.Width) / 2;
+                this.drawShadow(b, x, y);
+                Rectangle? textureView = new Rectangle?(this.texture.Bounds);
+                //StardewValleyCustomMod.Logger.Log($"tW: {this.texture.Bounds.Width}, z:{this.Zoom}, mW:{menuWidth}");
+                //StardewValleyCustomMod.Logger.Log($"X: {(this.texture.Bounds.Width / 2 * this.Zoom - menuWidth) / this.Zoom}");
+                if (this.texture.Width * this.Zoom > menuWidth)
+                    textureView = new Rectangle(Math.Abs(this.texture.Bounds.Width * this.Zoom - menuWidth) / (2 * this.Zoom), 0, menuWidth / this.Zoom > this.texture.Width ? this.texture.Width : menuWidth / this.Zoom, this.texture.Height);
+                /*  width = this.texture.Bounds.Width / 2 * this.Zoom - 8 * Game1.tileSize, 8 * Game1.tileSize
+                 * 
+                 * 
+                 */
+                b.Draw(this.texture, new Vector2((float)x, (float)y), textureView, this.color, 0.0f, new Vector2(0.0f, 0.0f), (float)this.Zoom, SpriteEffects.None, 0.89f);
             }
+                //base.drawInMenu(b, x, y);
         }
         /*
          *  if (this.tilesWide <= 8)
@@ -300,31 +266,71 @@ namespace StardewValleyCustomMod
             } 
          */
 
+        public void drawInMenu(SpriteBatch b, int x, int y, int zoom)
+        {
+            this.Zoom = zoom;
+            this.drawInMenu(b, x, y);
+        }
+
+        public override void draw(SpriteBatch b)
+        {
+            // Construction
+            if (this.daysOfConstructionLeft > 0)
+                this.drawInConstruction(b);
+
+            // Building
+            else if (!this.animalHouse)
+                base.draw(b);
+            
+            // Animal House
+            else
+            {
+                this.drawShadow(b, -1, -1);
+
+                b.Draw(this.AnimalDoorTexture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX + this.animalDoor.X), (float)((this.tileY + this.tilesHigh))) * Game1.tileSize - new Vector2((float)0, (float)this.AnimalDoorTexture.Height * Game1.pixelZoom - this.yPositionOfAnimalDoor)), new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.AnimalDoorTexture.Height)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 0f);
+                b.Draw(this.texture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX * Game1.tileSize), (float)(this.tileY * Game1.tileSize + this.tilesHigh * Game1.tileSize))), new Rectangle?(this.texture.Bounds), this.color * this.alpha, 0.0f, new Vector2(0.0f, 112f), 4f, SpriteEffects.None, (float)((this.tileY + this.tilesHigh) * Game1.tileSize) / 10000f);
+
+                // Upgrading
+                if (this.daysUntilUpgrade > 0)
+                    b.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, this.getUpgradeSignLocation()), new Rectangle?(new Rectangle(367, 309, 16, 15)), Color.White * this.alpha, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, (float)((double)((this.tileY + this.tilesHigh) * Game1.tileSize) / 10000.0 + 9.99999974737875E-05));
+            }
+        }
+
+        // Update any user interactions with the building
         public override void Update(GameTime time)
         {
             base.Update(time);
+
+            // Update the animal door
             if (this.animalHouse)
             {
-                if (this.animalDoorMotion == 0)
-                    return;
-                if (this.animalDoorOpen && this.yPositionOfAnimalDoor <= Coop.openAnimalDoorPosition)
+                if (this.animalDoorMotion != 0)
                 {
-                    this.animalDoorMotion = 0;
-                    this.yPositionOfAnimalDoor = Coop.openAnimalDoorPosition;
+                    if (this.animalDoorOpen && this.yPositionOfAnimalDoor <= -(this.animalDoorHeight * Game1.pixelZoom) + Game1.pixelZoom * 3) //pixelZoom * 3 is what base game uses, so keeping it consistent with the base game
+                    {
+                        this.animalDoorMotion = 0;
+                        this.yPositionOfAnimalDoor = -(this.animalDoorHeight * Game1.pixelZoom) + Game1.pixelZoom * 3;
+                    }
+                    else if (!this.animalDoorOpen && this.yPositionOfAnimalDoor >= 0)
+                    {
+                        this.animalDoorMotion = 0;
+                        this.yPositionOfAnimalDoor = 0;
+                    }
+                    this.yPositionOfAnimalDoor = this.yPositionOfAnimalDoor + this.animalDoorMotion;
                 }
-                else if (!this.animalDoorOpen && this.yPositionOfAnimalDoor >= 0)
-                {
-                    this.animalDoorMotion = 0;
-                    this.yPositionOfAnimalDoor = 0;
-                }
-                this.yPositionOfAnimalDoor = this.yPositionOfAnimalDoor + this.animalDoorMotion;
             }
         }
         
+        // TODO needs a better check for which tile is part of the door, if the door varies in width
+        // Check for player interactions
         public override bool doAction(Vector2 tileLocation, StardewValley.Farmer who)
         {
-            if (this.daysOfConstructionLeft > 0 || (double)tileLocation.X != (double)(this.tileX + this.animalDoor.X) || (double)tileLocation.Y != (double)(this.tileY + this.animalDoor.Y))
+            if (this.daysOfConstructionLeft > 0 || (double)tileLocation.X < (double)(this.tileX + this.animalDoor.X) || (double)tileLocation.X >= (double)(this.tileX + this.animalDoor.X + this.animalDoorWidth / (Game1.tileSize / Game1.pixelZoom)) || (double)tileLocation.Y != (double)(this.tileY + this.animalDoor.Y))
                 return base.doAction(tileLocation, who);
+
+            StardewValleyCustomMod.Logger.Log($"Selected Tiled: {tileLocation}");
+            StardewValleyCustomMod.Logger.Log($"tileX: {this.tileX}, animalDoorX: {this.animalDoor.X}, animalDoorW:{this.animalDoorWidth}");
+            // Animal Door Interaction
             if (!this.animalDoorOpen)
                 Game1.playSound("doorCreak");
             else

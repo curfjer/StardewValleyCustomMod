@@ -21,6 +21,11 @@
  * 
  * View interiors other rooms/floors???
  * - hover over warp zone, highlights tile, hover text of name of warp location, click it to load the location, clicking the farm warp does nothing
+ * 
+ * Check what sounds we have access to, might find some better ones
+ *  - possible to get own sound files?
+ *  
+ *  buttons below image to show season image, event image?
  */
 
 using Microsoft.Xna.Framework;
@@ -64,6 +69,8 @@ namespace StardewValleyCustomMod.Menus
         private ClickableTextureComponent detailsTab;
         private ClickableTextureComponent costTab;
         private ClickableTextureComponent interiorButton;
+        private ClickableTextureComponent zoomOut;
+        private ClickableTextureComponent zoomIn;
         private CustomBuilding currentBuilding;
         private Building buildingToMove; // keep building or change to custombuilding? TODO
         private string buildingDescription;
@@ -84,6 +91,8 @@ namespace StardewValleyCustomMod.Menus
         private bool interior;
         private bool upgradeMode;
         private Building buildingToUpgrade;// keep building or change to custombuilding? TODO
+        private int zoom;
+        private static int MAXZOOM = 4;
 
         public CustomBuildingsMenu()
         {
@@ -97,6 +106,7 @@ namespace StardewValleyCustomMod.Menus
             this.currentTab = 0;
             this.interior = false;
             this.upgradeMode = false;
+            this.zoom = 4;
 
             this.Logger.Log("Loading Crafting Menu...");
 
@@ -161,6 +171,9 @@ namespace StardewValleyCustomMod.Menus
             this.detailsTab = new ClickableTextureComponent("Details", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder / 2, this.yPositionOnScreen + Game1.tileSize * 5 / 4 + IClickableMenu.spaceToClearTopBorder + Game1.tileSize, Game1.tileSize, Game1.tileSize), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(16, 0, 16, 16), (float)Game1.pixelZoom, false);
             this.costTab = new ClickableTextureComponent("Cost", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder / 2, this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.tileSize * 2 + IClickableMenu.spaceToClearTopBorder, Game1.tileSize, Game1.tileSize), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(0, 0, 16, 16), (float)Game1.pixelZoom, false);
             this.interiorButton = new ClickableTextureComponent("Select Interior", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width - IClickableMenu.borderWidth, this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.tileSize * 3 + Game1.pixelZoom*4 + IClickableMenu.spaceToClearTopBorder, 25 * Game1.pixelZoom, 18 * Game1.pixelZoom), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(32, 0, 25, 18), (float)Game1.pixelZoom, false);
+
+            this.zoomIn = new ClickableTextureComponent("Zoom In", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen - Game1.tileSize * 5 / 2 + 2 * Game1.pixelZoom, Game1.viewport.Height / 2 - 38 / 2 * Game1.pixelZoom - (8 + 1) * Game1.pixelZoom, Game1.tileSize, Game1.tileSize), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(152, 58, 7, 8), (float)Game1.pixelZoom, false);
+            this.zoomOut = new ClickableTextureComponent("Zoom Out", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen - Game1.tileSize * 5 / 2 + 2 * Game1.pixelZoom, Game1.viewport.Height / 2 + 38 / 2 * Game1.pixelZoom + Game1.pixelZoom, Game1.tileSize, Game1.tileSize), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(152, 106, 7, 8), (float)Game1.pixelZoom, false);
         }
 
         public void setNewActiveBlueprint()
@@ -195,6 +208,8 @@ namespace StardewValleyCustomMod.Menus
                 //this.detailsButton.tryHover(x, y, 0.1f);
                 //this.costButton.tryHover(x, y, 0.1f);
                 this.interiorButton.tryHover(x, y, 0.1f);
+                this.zoomIn.tryHover(x, y, 0.1f);
+                this.zoomOut.tryHover(x, y, 0.1f);
 
                 // Hover Text
                 if (this.CurrentBlueprint.isUpgrade() && this.upgradeIcon.containsPoint(x, y))
@@ -206,13 +221,13 @@ namespace StardewValleyCustomMod.Menus
                 else if (this.okButton.containsPoint(x, y) && this.CurrentBlueprint.doesFarmerHaveEnoughResourcesToBuild())
                     this.hoverText = Game1.content.LoadString("Strings\\UI:Carpenter_Build");
                 else if (this.descriptionTab.containsPoint(x, y))
-                    this.hoverText = "Description";
+                    this.hoverText = this.descriptionTab.name;
                 else if (this.detailsTab.containsPoint(x, y))
-                    this.hoverText = "Details";
+                    this.hoverText = this.detailsTab.name;
                 else if (this.costTab.containsPoint(x, y))
-                    this.hoverText = "Cost";
+                    this.hoverText = this.costTab.name;
                 else if (this.interiorButton.containsPoint(x, y))
-                    this.hoverText = "Select Interior";
+                    this.hoverText = this.interiorButton.name;
                 else
                     this.hoverText = "";
             }
@@ -423,6 +438,21 @@ namespace StardewValleyCustomMod.Menus
                         Game1.globalFadeToBlack(new Game1.afterFadeFunction(this.returnToCarpentryMenu), 0.02f);
                         this.interior = false;
                     }
+                }
+                // Zoom Buttons
+                if (this.zoomIn.containsPoint(x, y))
+                {
+                    Game1.playSound("smallSelect");
+                    this.zoom++;
+                    if (this.zoom >= CustomBuildingsMenu.MAXZOOM)
+                        this.zoom = 4;
+                }
+                if (this.zoomOut.containsPoint(x, y))
+                {
+                    Game1.playSound("smallSelect");
+                    this.zoom--;
+                    if (this.zoom <= 0)
+                        this.zoom = 1;
                 }
                 // Description Tab
                 if (this.descriptionTab.containsPoint(x, y) && this.currentTab != 0)
@@ -675,15 +705,32 @@ namespace StardewValleyCustomMod.Menus
             if (!this.onFarm && !this.interior)
             {
                 base.draw(b);
+                // Draw box for building display
                 IClickableMenu.drawTextureBox(b, this.xPositionOnScreen - Game1.tileSize * 3 / 2, this.yPositionOnScreen - Game1.tileSize / 4, this.maxWidthOfBuildingViewer + Game1.tileSize, this.maxHeightOfBuildingViewer + Game1.tileSize, this.magicalConstruction ? Color.RoyalBlue : Color.White);
-                
-                this.currentBuilding.drawInMenu(b, this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - this.currentBuilding.tilesWide * Game1.tileSize / 2 - Game1.tileSize, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - this.currentBuilding.getSourceRectForMenu().Height * Game1.pixelZoom / 2);
-                
+
+                /* X: this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - this.currentBuilding.tilesWide * Game1.tileSize / 2 - Game1.tileSize
+                 * this.xPositionOnScreen + this.maxWidthofBuildingViewer / 2
+                 * - (this.currentBuilding.texture.Bounds.Width / 2) * this.zoom
+                 * 
+                 * maybe - do this in rectangle so that you always see the center of the building?
+                 * if (this.currentBuilding.texture.Bounds.Width * this.zoom > this.maxWidthofBuildingViewer)
+                 *  this.xPositionOnScreen
+                 * 
+                 * Y:this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - this.currentBuilding.getSourceRectForMenu().Height * Game1.pixelZoom / 2
+                 * this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2
+                 * - (this.currentBuilding.texture.Bounds.Height / 2) * this.zoom
+                 */
+                //this.currentBuilding.drawInMenu(b, this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - this.currentBuilding.tilesWide * Game1.tileSize / 2 - Game1.tileSize, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - this.currentBuilding.getSourceRectForMenu().Height * Game1.pixelZoom / 2, this.zoom);
+                if(this.currentBuilding.texture.Width * this.zoom > this.maxWidthOfBuildingViewer)
+                    this.currentBuilding.drawInMenu(b, this.xPositionOnScreen - Game1.tileSize - IClickableMenu.spaceToClearSideBorder, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * this.zoom, this.zoom);
+                else
+                    this.currentBuilding.drawInMenu(b, this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Width / 2) * this.zoom - Game1.tileSize, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * this.zoom, this.zoom);
+
                 // Should this be displayed with exterior only?
                 if (this.CurrentBlueprint.isUpgrade())
                     this.upgradeIcon.draw(b);
 
-
+                // TODO why is the string "Deluxe Barn"???? end of this line
                 SpriteText.drawStringWithScrollBackground(b, this.buildingName, this.xPositionOnScreen + this.maxWidthOfBuildingViewer - IClickableMenu.spaceToClearSideBorder - Game1.tileSize / 4 + Game1.tileSize + ((this.width - (this.maxWidthOfBuildingViewer + Game1.tileSize * 2)) / 2 - SpriteText.getWidthOfString("Deluxe Barn") / 2), this.yPositionOnScreen, "Deluxe Barn", 1f, -1);
                 IClickableMenu.drawTextureBox(b, this.xPositionOnScreen + this.maxWidthOfBuildingViewer - Game1.tileSize / 4, this.yPositionOnScreen + Game1.tileSize * 5 / 4, this.maxWidthOfDescription + Game1.tileSize, this.maxWidthOfDescription + Game1.tileSize * 3 / 2, this.magicalConstruction ? Color.RoyalBlue : Color.White);
 
@@ -701,11 +748,25 @@ namespace StardewValleyCustomMod.Menus
                 this.okButton.draw(b, this.blueprints[this.currentBlueprintIndex].doesFarmerHaveEnoughResourcesToBuild() ? Color.White : Color.Gray * 0.8f, 0.88f);
                 this.demolishButton.draw(b);
                 this.moveButton.draw(b);
+                this.zoomIn.draw(b);
+                this.zoomOut.draw(b);
                 this.descriptionTab.draw(b);
                 this.detailsTab.draw(b);
                 this.costTab.draw(b);
                 if(this.CurrentBlueprint.HasInterior())
                     this.interiorButton.draw(b);
+
+                //b.Draw(StardewValleyCustomMod.CustomTiles, Game1.GlobalToLocal(Game1.viewport, new Vector2(this.xPositionOnScreen, this.maxHeightOfBuildingViewer / 2 - 38 / 2 * Game1.pixelZoom)), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(150, 67, 10, 38)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
+                b.Draw(StardewValleyCustomMod.CustomTiles, new Vector2(this.xPositionOnScreen - Game1.tileSize * 5 / 2, Game1.viewport.Height / 2 - 38 / 2 * Game1.pixelZoom), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(150, 67, 10, 38)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
+                // 4: 148, 69   3: 148, 78  2: 148, 87  1: 148, 96
+                // x is 2 pixels to the left, x - 2
+                // y is 2 pixels lower than top, y - 2
+                //  and increments by 9, y - 2 - 9 * zoom
+                // zoom does not go to 0 so need an initial amount added
+                //  y - 2 - 9 * zoom - 9
+                // needs to be scaled by pixelzoom
+                //b.Draw(StardewValleyCustomMod.CustomTiles, Game1.GlobalToLocal(Game1.viewport, new Vector2(0, this.maxHeightOfBuildingViewer / 2 - 38 / 2 * Game1.pixelZoom)), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(139, 67, 10, 7)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
+                b.Draw(StardewValleyCustomMod.CustomTiles, new Vector2(this.xPositionOnScreen - Game1.tileSize * 5 / 2 - Game1.pixelZoom, Game1.viewport.Height / 2 + (-38 / 2 + 9 * (4 - this.zoom) + 2) * Game1.pixelZoom), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(139, 67, 10, 7)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
             }
             // Draw Interior Selection Screen:
             else if (this.interior)

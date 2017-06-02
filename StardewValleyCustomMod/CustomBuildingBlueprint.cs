@@ -278,6 +278,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
                 interior.isFarm = this.CurrentInterior.Farmable;
                 interior.objects = new SerializableDictionary<Microsoft.Xna.Framework.Vector2, StardewValley.Object>();
                 interior = this.LoadCustomTileSheets(interior);
+
                 if(!Game1.locations.Contains(interior))
                 {
                     Game1.locations.Add(interior);

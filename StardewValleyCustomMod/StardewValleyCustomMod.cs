@@ -56,14 +56,6 @@
  *  info icon - make the circle bigger, but keep i the same size
  *  already built icon - maybe stagger houses on top of each other?
  *  
- *  fix upgrade
- *  - save old building data, demo old building, build new building
- *  - center new building on old building, check for hazards that will prevent the new building from being built
- *   - support different sizes of different upgrades etc, bathhouse is bigger than outhouse
- *  
- *  fix animalhouse type building
- *  - grab the extra methods from base game, adjust to what it needs
- *  
  *  I think I did this (UNTESTED) vvvv
  *  Is there a way to set default values after retrieve information from manifest
  *   -ex. user only sets filename, then default sets buildingname, folder name to the same as filename
@@ -107,9 +99,6 @@ namespace StardewValleyCustomMod
             MoreEvents.BeforeSaving += Events.Save; // Remove custom buildings from the farm map and save them
             SaveEvents.AfterSave += Events.Load; // Load custom buildings from the save file
             SaveEvents.AfterLoad += Events.Load; // Load custom buildings from the save file
-
-            //TimeEvents.DayOfMonthChanged += Events.DayOfMonthChanged;
-            //GraphicsEvents.OnPostRenderEvent += Events.OnPostRenderEvent;
 
             // NPC Custom Building Menu Access
             MenuEvents.MenuChanged += OnMenuChanged;
