@@ -26,6 +26,8 @@
  *  - possible to get own sound files?
  *  
  *  buttons below image to show season image, event image?
+ *  
+ *  what are spriteeffects? all draws have spriteeffects.none
  */
 
 using Microsoft.Xna.Framework;
@@ -44,6 +46,7 @@ using StardewModdingAPI;
 using xTile;
 using StardewValley.TerrainFeatures;
 using System;
+using StardewValley.Tools;
 
 namespace StardewValleyCustomMod.Menus
 {
@@ -731,11 +734,8 @@ namespace StardewValleyCustomMod.Menus
                 //else
                 this.currentBuilding.drawInMenu(b, (int)(this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Width / 2) * scalar - Game1.tileSize), (int)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * scalar), scalar);
 
-                // Draw Farmer scaled to building TODO
-                StardewValley.Farmer farmer = Game1.player;
-                //farmer.FarmerRenderer.draw(b, farmer.FarmerSprite.CurrentAnimationFrame, farmer.FarmerSprite.CurrentFrame, farmer.FarmerSprite.sourceRect, new Vector2(this.xPositionOnScreen - Game1.tileSize * 3 / 2, this.yPositionOnScreen + this.maxHeightOfBuildingViewer - Game1.tileSize * 4), Vector2.Zero, 1f, Color.White, 0.0f, scalar, farmer);
-                farmer.FarmerRenderer.draw(b, new FarmerSprite.AnimationFrame(0, 0, false, false, (AnimatedSprite.endOfAnimationBehavior)null, false), 0, new Microsoft.Xna.Framework.Rectangle(0, 0, 16, 32), new Vector2((float)(this.xPositionOnScreen - Game1.tileSize * 5 / 4), (float)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer - Game1.tileSize * 2 * scalar / Game1.pixelZoom)), Vector2.Zero, 0.8f, 2, Color.White, 0.0f, (float)scalar / Game1.pixelZoom, farmer);
-                //public void draw(SpriteBatch b, FarmerSprite.AnimationFrame animationFrame, int currentFrame, Rectangle sourceRect, Vector2 position, Vector2 origin, float layerDepth, Color overrideColor, float rotation, float scale, Farmer who)
+                this.drawFarmer(b, scalar);
+
 
                 //
                 // Should this be displayed with exterior only?
@@ -812,6 +812,80 @@ namespace StardewValleyCustomMod.Menus
             this.drawMouse(b);
             if (this.hoverText.Length > 0)
                 IClickableMenu.drawHoverText(b, this.hoverText, Game1.dialogueFont, 0, 0, -1, (string)null, -1, (string[])null, (Item)null, 0, -1, -1, -1, -1, 1f, (CraftingRecipe)null);
+        }
+
+        // Draws farmer to scale of building
+        public void drawFarmer(SpriteBatch b, float scalar)
+        {
+            // Draw Farmer scaled to building TODO
+            StardewValley.Farmer farmer = Game1.player;
+            
+            //farmer.FarmerRenderer.draw(b, farmer.FarmerSprite.CurrentAnimationFrame, farmer.FarmerSprite.CurrentFrame, farmer.FarmerSprite.sourceRect, new Vector2(this.xPositionOnScreen - Game1.tileSize * 3 / 2, this.yPositionOnScreen + this.maxHeightOfBuildingViewer - Game1.tileSize * 4), Vector2.Zero, 1f, Color.White, 0.0f, scalar, farmer);
+
+            FarmerRenderer farmerRend = farmer.FarmerRenderer;
+
+            Vector2 position = new Vector2((float)(this.xPositionOnScreen - Game1.tileSize * 5 / 4), (float)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer - Game1.tileSize * 2 * scalar / Game1.pixelZoom));
+            Vector2 origin = Vector2.Zero;
+            Vector2 rotationAdjustment = Vector2.Zero;
+            Vector2 positionOffset = new Vector2();
+            
+            int currentFrame = 0;
+            int facingDirection = 2;
+            int heightOffset = 0;
+            if (!farmer.isMale)
+                heightOffset = 4;
+            int eyeXOffset = 5;
+            int eyeYOffset = 12;
+            int shirtYOffset = 15;
+            int shirtXOffset = 4;
+
+            float layerDepth = 0.8f;
+            float rotation = 0.0f;
+            Color overrideColor = Color.White;
+
+            FarmerSprite.AnimationFrame animationFrame = new FarmerSprite.AnimationFrame(0, 0, false, false, (AnimatedSprite.endOfAnimationBehavior)null, false);
+            positionOffset.Y = (float)animationFrame.positionOffset * Game1.pixelZoom;
+            positionOffset.X = (float)animationFrame.xOffset * Game1.pixelZoom;
+
+            Microsoft.Xna.Framework.Rectangle sourceRect = new Microsoft.Xna.Framework.Rectangle(0, 0, 16, 32);
+            Microsoft.Xna.Framework.Rectangle shirtSourceRect = new Microsoft.Xna.Framework.Rectangle(farmer.shirt * 8 % FarmerRenderer.shirtsTexture.Width, farmer.shirt * 8 / FarmerRenderer.shirtsTexture.Width * 32, 8, 8);
+            Microsoft.Xna.Framework.Rectangle hairstyleSourceRect = new Microsoft.Xna.Framework.Rectangle(farmer.getHair() * 16 % FarmerRenderer.hairStylesTexture.Width, farmer.getHair() * 16 / FarmerRenderer.hairStylesTexture.Width * 96, 16, 32);
+            Microsoft.Xna.Framework.Rectangle accessorySourceRect = new Microsoft.Xna.Framework.Rectangle();
+
+            if (farmer.accessory >= 0)
+                accessorySourceRect = new Microsoft.Xna.Framework.Rectangle(farmer.accessory * 16 % FarmerRenderer.accessoriesTexture.Width, farmer.accessory * 16 / FarmerRenderer.accessoriesTexture.Width * 32, 16, 16);
+            
+            //Vector2 position1 = new Vector2((float)(this.gamesToLoadButton[index].bounds.X + Game1.tileSize + Game1.tileSize - Game1.pixelZoom), (float)(this.gamesToLoadButton[index].bounds.Y + Game1.tileSize * 2 + Game1.pixelZoom * 4));
+            // Draw Farmers shadow
+            b.Draw(Game1.shadowTexture, position + origin + positionOffset + new Vector2((sourceRect.Width - Game1.shadowTexture.Width) / 2 * scalar, (sourceRect.Height - Game1.shadowTexture.Height / 2 - 1) * scalar), Game1.shadowTexture.Bounds, Color.White, rotation, origin, scalar, SpriteEffects.None, (float)layerDepth);
+
+            // Draws base of head, chest, and shoes
+            b.Draw(farmerRend.baseTexture, position + origin + positionOffset, new Microsoft.Xna.Framework.Rectangle?(sourceRect), overrideColor, rotation, origin, scalar, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth);
+
+            // Draws nothing currently, look at farmer_base
+            sourceRect.Offset(288, 0);
+            b.Draw(farmerRend.baseTexture, position + origin + positionOffset, new Microsoft.Xna.Framework.Rectangle?(sourceRect), overrideColor.Equals(Color.White) ? farmer.pantsColor : overrideColor, rotation, origin, scalar, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + (farmer.FarmerSprite.CurrentAnimationFrame.frame == 5 ? 0.00092f : 9.2E-08f));
+
+            if (farmer.currentEyes != 0 && facingDirection != 0 && (!farmer.isRidingHorse() && Game1.timeOfDay < 2600) && (!farmer.FarmerSprite.pauseForSingleAnimation || farmer.usingTool && farmer.CurrentTool is FishingRod))
+            {
+                // Not sure - part of chest? - same x value as eyes so used that, y value is 1 less than eyes
+                b.Draw(farmerRend.baseTexture, position + origin + positionOffset + new Vector2((float)(eyeXOffset * scalar), (float)(eyeYOffset - 1 * scalar)), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(5, 16, facingDirection == 2 ? 6 : 2, 2)), overrideColor, 0.0f, origin, scalar, SpriteEffects.None, layerDepth + 5E-08f);
+                // Eyes
+                b.Draw(farmerRend.baseTexture, position + origin + positionOffset + new Vector2((float)(eyeXOffset * scalar), (float)(eyeYOffset * scalar)), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(264 + (facingDirection == 3 ? 4 : 0), 2 + (farmer.currentEyes - 1) * 2, facingDirection == 2 ? 6 : 2, 2)), overrideColor, 0.0f, origin, scalar, SpriteEffects.None, layerDepth + 1.2E-07f);
+            }
+
+            
+            b.Draw(FarmerRenderer.shirtsTexture, position + origin + positionOffset + new Vector2((float)(shirtXOffset * scalar), (float)((double)(shirtYOffset * scalar))), new Microsoft.Xna.Framework.Rectangle?(shirtSourceRect), overrideColor, rotation, origin, scalar, SpriteEffects.None, layerDepth + 1.5E-07f);
+
+            // Accessory
+            if (farmer.accessory >= 0)
+                b.Draw(FarmerRenderer.accessoriesTexture, position + origin + positionOffset + rotationAdjustment + new Vector2((float)(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * Game1.pixelZoom), (float)(8 + FarmerRenderer.featureYOffsetPerFrame[currentFrame] * Game1.pixelZoom + heightOffset - 4)), new Microsoft.Xna.Framework.Rectangle?(accessorySourceRect), !overrideColor.Equals(Color.White) || farmer.accessory >= 6 ? overrideColor : farmer.hairstyleColor, rotation, origin, (float)(scalar + ((double)rotation != 0.0 ? 0.0 : 0.0)), SpriteEffects.None, layerDepth + (farmer.accessory < 8 ? 1.9E-05f : 2.9E-05f));
+            // Hair
+            b.Draw(FarmerRenderer.hairStylesTexture, position + origin + positionOffset + new Vector2((float)(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * Game1.pixelZoom), (float)(FarmerRenderer.featureYOffsetPerFrame[currentFrame] * Game1.pixelZoom + (!farmer.isMale || farmer.hair < 16 ? (farmer.isMale || farmer.hair >= 16 ? 0 : 4) : -4))), new Microsoft.Xna.Framework.Rectangle?(hairstyleSourceRect), overrideColor.Equals(Color.White) ? farmer.hairstyleColor : overrideColor, rotation, origin, scalar, SpriteEffects.None, layerDepth + 2.2E-05f);
+
+            // Notsure
+            sourceRect.Offset((animationFrame.secondaryArm ? 192 : 96) - 288, 0);
+            b.Draw(farmerRend.baseTexture, position + origin + positionOffset + farmer.armOffset, new Microsoft.Xna.Framework.Rectangle?(sourceRect), overrideColor, rotation, origin, scalar, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + (facingDirection != 0 ? 4.9E-05f : 0.0f));
         }
 
         public void DrawBuildingTiles(SpriteBatch b, Building building)

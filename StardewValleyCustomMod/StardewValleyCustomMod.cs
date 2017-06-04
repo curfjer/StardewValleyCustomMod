@@ -27,6 +27,7 @@
  * Add computer object, interact for menu, select farm buildings, customBuildingsMenu is opened
  *  black screen when not in use, what should it be when in use? changes based on what you select? if in building menu then mini version of the building menu is on the screen?
  *  get from mail from parent?
+ *  - use a bookcase? player interacts with bookcase and get blueprint menu?
  *
  * Ability to have option to choose different exteriors? (not the same as seasonal?)
  * Clean code
