@@ -39,6 +39,7 @@
  * Should I have a day 0 construction texture?
  * Upgrade construction will be constructing around the prior building and turn into the upgrade
  * - the last day paint, is being applied, all the exterior decor is being added?
+ * - brick buildings, bricks stacked up slowly being built
  * 
  * 
  * Custom TouchActions?
@@ -53,8 +54,6 @@
  *  - might already work if I just load the map
  *  - can add up and down arrows on interior preview to cycle through floors
  *  - building where you can go on roof or something, so you'd be on the farm but the roof of the building? building has layers maybe?
- *  
- *  winery is cutoff in menu, not sure why, greenhouse sticks out and looks good
  *  
  *  add prior building into cost tab for the upgrade building
  *  

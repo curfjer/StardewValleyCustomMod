@@ -312,7 +312,8 @@ namespace StardewValleyCustomMod
             base.Update(time);
 
             // TODO is this where I should put it?
-            this.UpdateConstructionTexture();
+            if(this.customConstruction)
+                this.UpdateConstructionTexture();
 
             // Update the animal door
             if (this.animalHouse)
