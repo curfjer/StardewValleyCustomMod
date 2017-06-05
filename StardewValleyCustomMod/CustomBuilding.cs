@@ -31,6 +31,10 @@ namespace StardewValleyCustomMod
         public int animalDoorHeight;
         public int animalDoorWidth;
         public float scalar;
+        public bool customConstruction;
+        public int daysToConstruct;
+        public int[] constructionDayTextureList;
+        private Texture2D ConstructionTexture;
         private Texture2D AnimalDoorTexture;
         private LocalizedContentManager Content;
 
@@ -55,6 +59,9 @@ namespace StardewValleyCustomMod
             this.tilesHigh = blu.TilesHeight;
             this.texture = blu.texture;
             this.maxOccupants = blu.MaxOccupants;
+            this.daysToConstruct = blu.DaysToConstruct;
+            this.customConstruction = blu.CustomConstruction;
+            this.constructionDayTextureList = blu.ConstructionDayTextureList;
 
             // Interior
             if (blu.HasInterior())
@@ -131,6 +138,9 @@ namespace StardewValleyCustomMod
                 this.texture = this.Content.Load<Texture2D>(this.fileName + "_" + Game1.currentSeason);
             else
                 this.texture = this.Content.Load<Texture2D>(this.fileName);// Create a custom building then convert back to orig building         
+
+            if (this.customConstruction)
+                this.UpdateConstructionTexture();
 
             // Load Animal Door
             if (this.animalHouse)
@@ -268,7 +278,10 @@ namespace StardewValleyCustomMod
         {
             // Construction
             if (this.daysOfConstructionLeft > 0)
-                this.drawInConstruction(b);
+                if (this.customConstruction)
+                    this.DrawInCustomConstruction(b);
+                else
+                    this.drawInConstruction(b);
 
             // Building
             else if (!this.animalHouse)
@@ -288,10 +301,18 @@ namespace StardewValleyCustomMod
             }
         }
 
+        public void DrawInCustomConstruction(SpriteBatch b)
+        {
+            b.Draw(this.ConstructionTexture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX * Game1.tileSize), (float)(this.tileY * Game1.tileSize + this.tilesHigh * Game1.tileSize))), new Rectangle?(this.texture.Bounds), this.color * this.alpha, 0.0f, new Vector2(0.0f, 112f), 4f, SpriteEffects.None, (float)((this.tileY + this.tilesHigh) * Game1.tileSize) / 10000f);
+        }
+
         // Update any user interactions with the building
         public override void Update(GameTime time)
         {
             base.Update(time);
+
+            // TODO is this where I should put it?
+            this.UpdateConstructionTexture();
 
             // Update the animal door
             if (this.animalHouse)
@@ -311,6 +332,11 @@ namespace StardewValleyCustomMod
                     this.yPositionOfAnimalDoor = this.yPositionOfAnimalDoor + this.animalDoorMotion;
                 }
             }
+        }
+
+        public void UpdateConstructionTexture()
+        {
+            this.ConstructionTexture = this.Content.Load<Texture2D>(this.fileName + "_construction_" + this.constructionDayTextureList[this.daysToConstruct - this.daysOfConstructionLeft]);
         }
         
         // TODO needs a better check for which tile is part of the door, if the door varies in width

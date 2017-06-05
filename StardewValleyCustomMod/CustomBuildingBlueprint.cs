@@ -50,6 +50,8 @@ namespace StardewValleyCustomMod.CustomBlueprints
         public int MoneyRequired;
         public int[] SkillsRequired;
         public int DaysToConstruct;
+        public bool CustomConstruction;
+        public int[] ConstructionDayTextureList;
 
         public int SourceRectHeight;// What are these for?
         public int SourceRectWidth; // ^^^
@@ -103,6 +105,8 @@ namespace StardewValleyCustomMod.CustomBlueprints
             this.MoneyRequired = 0;
             this.SkillsRequired = new int[]{ 0, 0, 0, 0};
             this.DaysToConstruct = 2;
+            this.CustomConstruction = false;
+            this.ConstructionDayTextureList = new int[] { 1, 2};
 
             this.SourceRectHeight = 0;
             this.SourceRectWidth = 0;

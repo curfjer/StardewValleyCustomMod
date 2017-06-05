@@ -729,12 +729,13 @@ namespace StardewValleyCustomMod.Menus
 
                 if ((this.currentBuilding.texture.Height + shadowHeight)* scalar > this.maxHeightOfBuildingViewer)
                     scalar = (float)this.maxHeightOfBuildingViewer / (float)(this.currentBuilding.texture.Height + shadowHeight);
-                
+
                 //this.currentBuilding.drawInMenu(b, this.xPositionOnScreen - Game1.tileSize - IClickableMenu.spaceToClearSideBorder, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * this.zoom, this.zoom);
                 //else
-                this.currentBuilding.drawInMenu(b, (int)(this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Width / 2) * scalar - Game1.tileSize), (int)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * scalar), scalar);
-
-                this.drawFarmer(b, scalar);
+                Vector2 buildingPosition = new Vector2((int)(this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Width / 2) * scalar - Game1.tileSize), (int)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * scalar));
+                this.currentBuilding.drawInMenu(b, (int)buildingPosition.X, (int)buildingPosition.Y, scalar);
+                Microsoft.Xna.Framework.Rectangle farmerSize = new Microsoft.Xna.Framework.Rectangle(0, 0, 16, 32);
+                this.drawFarmer(b, buildingPosition + new Vector2(-farmerSize.Width / 2 * scalar, (this.currentBuilding.texture.Bounds.Height - farmerSize.Height) * scalar), scalar);
 
 
                 //
@@ -815,7 +816,7 @@ namespace StardewValleyCustomMod.Menus
         }
 
         // Draws farmer to scale of building
-        public void drawFarmer(SpriteBatch b, float scalar)
+        public void drawFarmer(SpriteBatch b, Vector2 position, float scalar)
         {
             // Draw Farmer scaled to building TODO
             StardewValley.Farmer farmer = Game1.player;
@@ -824,7 +825,7 @@ namespace StardewValleyCustomMod.Menus
 
             FarmerRenderer farmerRend = farmer.FarmerRenderer;
 
-            Vector2 position = new Vector2((float)(this.xPositionOnScreen - Game1.tileSize * 5 / 4), (float)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer - Game1.tileSize * 2 * scalar / Game1.pixelZoom));
+            //Vector2 position = new Vector2((float)(this.xPositionOnScreen - Game1.tileSize * 5 / 4), (float)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer - Game1.tileSize * 2 * scalar / Game1.pixelZoom));
             Vector2 origin = Vector2.Zero;
             Vector2 rotationAdjustment = Vector2.Zero;
             Vector2 positionOffset = new Vector2();

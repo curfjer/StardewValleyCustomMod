@@ -36,6 +36,10 @@
  * 
  * Custom Building texture for when building the building, day 1 just the floor?, day 2 add walls?, day 3 roof? day 4 done? etc
  * Default is games building
+ * Should I have a day 0 construction texture?
+ * Upgrade construction will be constructing around the prior building and turn into the upgrade
+ * - the last day paint, is being applied, all the exterior decor is being added?
+ * 
  * 
  * Custom TouchActions?
  * 
