@@ -96,6 +96,8 @@ namespace StardewValleyCustomMod.Menus
         private Building buildingToUpgrade;// keep building or change to custombuilding? TODO
         private int zoom;
         private static int MAXZOOM = 4;
+        private DropDownMenu SorterMenu;
+        private String sorter;
 
         public CustomBuildingsMenu()
         {
@@ -110,6 +112,7 @@ namespace StardewValleyCustomMod.Menus
             this.interior = false;
             this.upgradeMode = false;
             this.zoom = 4;
+            this.sorter = "Alphabetical";
 
             this.Logger.Log("Loading Crafting Menu...");
 
@@ -177,6 +180,9 @@ namespace StardewValleyCustomMod.Menus
 
             this.zoomIn = new ClickableTextureComponent("Zoom In", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen - Game1.tileSize * 5 / 2 + 2 * Game1.pixelZoom, Game1.viewport.Height / 2 - 38 / 2 * Game1.pixelZoom - (8 + 1) * Game1.pixelZoom, Game1.tileSize, Game1.tileSize), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(152, 58, 7, 8), (float)Game1.pixelZoom, false);
             this.zoomOut = new ClickableTextureComponent("Zoom Out", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen - Game1.tileSize * 5 / 2 + 2 * Game1.pixelZoom, Game1.viewport.Height / 2 + 38 / 2 * Game1.pixelZoom + Game1.pixelZoom, Game1.tileSize, Game1.tileSize), (string)null, (string)null, customTiles, new Microsoft.Xna.Framework.Rectangle(152, 106, 7, 8), (float)Game1.pixelZoom, false);
+
+            String[] sorterMenuOptions = { "Alphabetical", "test1", "test2" };
+            this.SorterMenu = new DropDownMenu("Sort by: ", sorterMenuOptions, new Vector2(this.xPositionOnScreen, this.yPositionOnScreen - Game1.tileSize));
         }
 
         public void setNewActiveBlueprint()
@@ -335,7 +341,10 @@ namespace StardewValleyCustomMod.Menus
                 return;
             if (!this.onFarm && !this.interior) // TODO do I need this for interior screen too; test
                 base.receiveLeftClick(x, y, playSound);
-            
+            String sort = this.SorterMenu.OptionClicked(x, y);
+            if (sort != null)
+                this.sorter = sort;
+
             //
             // Check buttons and tabs:
             //
@@ -519,7 +528,7 @@ namespace StardewValleyCustomMod.Menus
             if (!this.upgradeMode)
             {
                 Building buildingAt = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).getBuildingAt(new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize)));
-                if (buildingAt != null && this.CurrentBlueprint.BuildingName != null && buildingAt.buildingType.Split('_').GetValue(1).Equals(this.CurrentBlueprint.NameOfBuildingToUpgrade))
+                if (buildingAt != null && this.CurrentBlueprint.BuildingName != null && /*buildingAt.buildingType.Split('_').GetValue(1)*/buildingAt.buildingType.Equals(this.CurrentBlueprint.NameOfBuildingToUpgrade))
                 {
                     this.upgradeMode = true;
                     this.buildingToUpgrade = buildingAt;
@@ -609,7 +618,11 @@ namespace StardewValleyCustomMod.Menus
         {
             bool built = false;
             if (this.upgradeMode)
-                built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentBuilding, new Vector2(this.buildingToUpgrade.tileX, this.buildingToUpgrade.tileY), false, Game1.player);
+                built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentBuilding, new Vector2(this.currentBuilding.tileX, this.currentBuilding.tileY), false, Game1.player);
+            else if (this.currentBuilding.specialProperties[0].Equals("Harvester"))
+            {
+                JunimoHut harvester = new JunimoHut();
+            }
             else
                 built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentBuilding, new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize)), false, Game1.player);
             this.currentBuilding.performActionOnConstruction((GameLocation)(BuildableGameLocation)Game1.getLocationFromName("Farm"));
@@ -769,7 +782,7 @@ namespace StardewValleyCustomMod.Menus
                 if(this.CurrentBlueprint.HasInterior())
                     this.interiorButton.draw(b);
 
-                
+                SorterMenu.Draw(b, Game1.pixelZoom);
                 //b.Draw(StardewValleyCustomMod.CustomTiles, new Vector2(this.xPositionOnScreen - Game1.tileSize * 5 / 2, Game1.viewport.Height / 2 - 38 / 2 * Game1.pixelZoom), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(150, 67, 10, 38)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
                 //b.Draw(StardewValleyCustomMod.CustomTiles, new Vector2(this.xPositionOnScreen - Game1.tileSize * 5 / 2 - Game1.pixelZoom, Game1.viewport.Height / 2 + (-38 / 2 + 9 * (4 - this.zoom) + 2) * Game1.pixelZoom), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(139, 67, 10, 7)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
             }
@@ -907,6 +920,9 @@ namespace StardewValleyCustomMod.Menus
                     vector2.Y = this.buildingToUpgrade.tileY - heightDifference;
                 else if (vector2.Y >= this.buildingToUpgrade.tileY)
                     vector2.Y = this.buildingToUpgrade.tileY;
+
+                this.currentBuilding.tileX = (int)vector2.X;
+                this.currentBuilding.tileY = (int)vector2.Y;
             }
 
             for (int y = 0; y < building.tilesHigh; ++y)

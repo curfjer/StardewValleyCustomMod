@@ -34,6 +34,8 @@ namespace StardewValleyCustomMod
         public bool customConstruction;
         public int daysToConstruct;
         public int[] constructionDayTextureList;
+        public string[] specialProperties;
+        public int harvesterRadius;
         private Texture2D ConstructionTexture;
         private Texture2D AnimalDoorTexture;
         private LocalizedContentManager Content;
@@ -73,9 +75,9 @@ namespace StardewValleyCustomMod
             }
             
             // Upgrade
-            if(blu.isUpgrade())
-                this.daysUntilUpgrade = blu.DaysToConstruct;
-            else
+            //if(blu.isUpgrade())
+                //this.daysUntilUpgrade = blu.DaysToConstruct;
+            //else
                 this.daysOfConstructionLeft = blu.DaysToConstruct;
 
             // Doors
@@ -97,6 +99,8 @@ namespace StardewValleyCustomMod
             this.seasonal = blu.Seasonal;
             this.magical = blu.Magical;
             this.scalar = 4;
+            this.specialProperties = blu.SpecialPropteries;
+            this.harvesterRadius = blu.HarvesterRadius;
         }
 
         // Create CustomBuilding from Building (base game)
@@ -277,7 +281,7 @@ namespace StardewValleyCustomMod
         public override void draw(SpriteBatch b)
         {
             // Construction
-            if (this.daysOfConstructionLeft > 0)
+            if (this.daysOfConstructionLeft > 0 || this.daysUntilUpgrade > 0)
                 if (this.customConstruction)
                     this.DrawInCustomConstruction(b);
                 else
@@ -311,10 +315,6 @@ namespace StardewValleyCustomMod
         {
             base.Update(time);
 
-            // TODO is this where I should put it?
-            if(this.customConstruction)
-                this.UpdateConstructionTexture();
-
             // Update the animal door
             if (this.animalHouse)
             {
@@ -333,6 +333,18 @@ namespace StardewValleyCustomMod
                     this.yPositionOfAnimalDoor = this.yPositionOfAnimalDoor + this.animalDoorMotion;
                 }
             }
+        }
+
+        public override void dayUpdate(int dayOfMonth)
+        {
+            base.dayUpdate(dayOfMonth);
+
+            StardewValleyCustomMod.Logger.Log($"ConstructionDays: {this.daysOfConstructionLeft}");
+            StardewValleyCustomMod.Logger.Log($"UpgradeDays: {this.daysUntilUpgrade}");
+
+            // TODO is this where I should put it?
+            if (this.customConstruction)
+                this.UpdateConstructionTexture();
         }
 
         public void UpdateConstructionTexture()

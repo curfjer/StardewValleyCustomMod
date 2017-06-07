@@ -45,6 +45,8 @@ namespace StardewValleyCustomMod.CustomBlueprints
         public string Description;
         public bool Magical;
         public bool Seasonal;
+        public string[] SpecialPropteries;
+        public int HarvesterRadius;
 
         public Dictionary<int, int> ResourcesRequired = new Dictionary<int, int>();
         public int MoneyRequired;
@@ -101,6 +103,8 @@ namespace StardewValleyCustomMod.CustomBlueprints
             this.Description = "No description.";
             this.Magical = false;
             this.Seasonal = false;
+            this.SpecialPropteries = new String[0];
+            this.HarvesterRadius = 0;
 
             this.MoneyRequired = 0;
             this.SkillsRequired = new int[]{ 0, 0, 0, 0};
@@ -403,6 +407,12 @@ namespace StardewValleyCustomMod.CustomBlueprints
         // Assumes the other parameters are of the same value.
         public void SetDefaults()
         {
+            // Adjsut coords
+            this.HumanDoorTileCoord.X -= 1;
+            this.HumanDoorTileCoord.Y -= 1;
+            this.AnimalDoorTileCoord.X -= 1;
+            this.AnimalDoorTileCoord.Y -= 1;
+
             if (this.FileName != "Default")
             {
                 if (this.BuildingName == "Default")

@@ -67,6 +67,41 @@
  *   different textures for night - mainly for different lighting purposes? default might be good enough
  *   
  *   blue tiles for upgrade - needs to have a door and animal door version because if the upgrade tile is the same spot as the door, the door is not displayed until built
+ *   
+ *   manifest changes are not applied to building already built
+ *   - need to have a check for current buildings and the blueprints on load (so start of every day) and change any values that are different from blueprint
+ *   
+ *   Support different texture sizes
+ *    - 16 (base)(*4), 32(*2), 64(*1)
+ *    
+ *    When checking for items required, check for id numbers and/or item names
+ *    
+ *    scroll - arrows and bar
+ *    
+ *    Sorting - small menu opens with list, click, update menu, close this menu
+ *    ex.  | Sort by | ... |
+ *    filters - Buttons for each one, highlighted when toggled
+ *    ex.  b1B2b3   b2 is on
+ *    
+ *    items required - sorting and filters
+ *      sorting - alphabetical, type, price (weight applied to items?)
+ *      filters - All, type, items you need, items you have,
+ *    
+ *    menu - sorting and filters - types, upgrades, 
+ *      sorting - alphabetical, smart? (upgrades next to their corresponding building), price/rarity? hmmm
+ *      filters - All, Upgrades, animal houses, regular buildings, magic, ???
+ *      Modpack sort and/or filter?
+ *      
+ *    Icons for types of building
+ *    - animal, magical, decoratable? etc
+ *    
+ *    Special Properties
+ *    - Warp
+ *    - Prevents debris from appearing on your farm. Keeps fences from decaying.
+ *    - Harvesters
+ *    - ???
+ *      
+ *    controller support to access menu, variable for what button to press
  */
 
 using System;
