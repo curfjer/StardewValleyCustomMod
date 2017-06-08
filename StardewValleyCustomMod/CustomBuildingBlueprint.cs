@@ -229,7 +229,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
             try
             {
                 this.texture = content.Load<Texture2D>(this.FileName);
-                if (this.BlueprintType.Equals("AnimalHouse"))
+                if (this.BlueprintType.Equals("Animal"))
                     this.AnimalDoorTexture = content.Load<Texture2D>(this.FileName + "_AnimalDoor");
                 StardewValleyCustomMod.Logger.Log($"The building blueprint for {this.BuildingName} loaded with texture!"); //DEBUG REMOVE
             }

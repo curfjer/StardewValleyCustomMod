@@ -119,6 +119,7 @@ using StardewValleyCustomMod.Menus;
 using StardewValleyCustomMod.CustomBlueprints;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using StardewValleyCustomMod.CustomBuildings;
 
 namespace StardewValleyCustomMod
 {
@@ -133,7 +134,7 @@ namespace StardewValleyCustomMod
         internal static DebugLogger Debug;
         internal static LocalizedContentManager Content; // TODO framework has a localizer, can you use that instead?
         internal static Texture2D CustomTiles;
-        internal static List<CustomBuilding> FarmBuildings;
+        internal static Buildings FarmBuildings;
 
         public override void Entry(IModHelper helper)
         {
@@ -157,7 +158,7 @@ namespace StardewValleyCustomMod
             Logger = Monitor;
             Content = new LocalizedContentManager(Game1.content.ServiceProvider, ModPath + "\\CustomBuildings");
             menuOpen = false;
-            FarmBuildings = new List<CustomBuilding>();
+            FarmBuildings = new Buildings();
 
             Logger.Log("Loading Config...");
             Config = helper.ReadConfig<Config>();
@@ -259,6 +260,20 @@ namespace StardewValleyCustomMod
 
             StardewValleyCustomMod.Logger.Log($"Did not find custom blueprint for {name}");
             return null;
+        }
+    }
+
+    public class Buildings
+    {
+        public List<CustomBuilding> CustomBuildings;
+        public List<AnimalBuilding> AnimalBuildings;
+        public List<HarvesterBuilding> HarvesterBuildings;
+
+        public Buildings()
+        {
+            CustomBuildings = new List<CustomBuilding>();
+            AnimalBuildings = new List<AnimalBuilding>();
+            HarvesterBuildings = new List<HarvesterBuilding>();
         }
     }
 }

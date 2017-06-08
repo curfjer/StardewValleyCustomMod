@@ -67,12 +67,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AnimalBuilding.cs" />
-    <Compile Include="CustomBuilding.cs" />
+    <Compile Include="CustomBuildings\AnimalBuilding.cs" />
+    <Compile Include="CustomBuildings\CustomBuilding.cs" />
+    <Compile Include="CustomBuildings\HarvesterBuilding.cs" />
     <Compile Include="DebugLogger.cs" />
     <Compile Include="DropDownMenu.cs" />
     <Compile Include="Events.cs" />
-    <Compile Include="Menus\StardewValleyCustomMod.cs" />
+    <Compile Include="Harvester.cs" />
+    <Compile Include="StardewValleyCustomMod.cs" />
     <Compile Include="CustomBuildableGameLocations.cs" />
     <Compile Include="BuildingStardew.cs" />
     <Compile Include="CustomBuildingBlueprint.cs" />
@@ -84,9 +86,7 @@
     <None Include="manifest.json" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="CustomBuildings\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="TextFile1.txt" />
   </ItemGroup>

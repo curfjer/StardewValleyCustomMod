@@ -47,6 +47,7 @@ using xTile;
 using StardewValley.TerrainFeatures;
 using System;
 using StardewValley.Tools;
+using StardewValleyCustomMod.CustomBuildings;
 
 namespace StardewValleyCustomMod.Menus
 {
@@ -189,7 +190,13 @@ namespace StardewValleyCustomMod.Menus
         {
             this.Logger.Log($"CurrentBlueprintIndex: {this.currentBlueprintIndex}"); // DEBUG REMOVE
             //this.currentBuilding = new Building(this.blueprints[this.currentBlueprintIndex], Vector2.Zero);
-            this.currentBuilding = new CustomBuilding(this.CurrentBlueprint, Vector2.Zero);
+
+            if(this.CurrentBlueprint.BlueprintType.Equals("Animal"))
+                this.currentBuilding = new AnimalBuilding(this.CurrentBlueprint, Vector2.Zero);
+            else if(this.CurrentBlueprint.BlueprintType.Equals("Harvester"))
+                this.currentBuilding = new HarvesterBuilding(this.CurrentBlueprint, Vector2.Zero);
+            else
+                this.currentBuilding = new CustomBuilding(this.CurrentBlueprint, Vector2.Zero);
             this.price = this.blueprints[this.currentBlueprintIndex].MoneyRequired;
             this.ingredients.Clear();
             foreach (KeyValuePair<int, int> keyValuePair in this.blueprints[this.currentBlueprintIndex].ResourcesRequired)
@@ -619,10 +626,6 @@ namespace StardewValleyCustomMod.Menus
             bool built = false;
             if (this.upgradeMode)
                 built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentBuilding, new Vector2(this.currentBuilding.tileX, this.currentBuilding.tileY), false, Game1.player);
-            else if (this.currentBuilding.specialProperties[0].Equals("Harvester"))
-            {
-                JunimoHut harvester = new JunimoHut();
-            }
             else
                 built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentBuilding, new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize)), false, Game1.player);
             this.currentBuilding.performActionOnConstruction((GameLocation)(BuildableGameLocation)Game1.getLocationFromName("Farm"));

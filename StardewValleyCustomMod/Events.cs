@@ -14,6 +14,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using StardewModdingAPI;
 using Microsoft.Xna.Framework;
+using StardewValleyCustomMod.CustomBuildings;
 
 namespace StardewValleyCustomMod
 {
@@ -21,6 +22,8 @@ namespace StardewValleyCustomMod
     public class PlayerSave
     {
         public CustomBuilding[] buildings;
+        public AnimalBuilding[] animalBuildings;
+        public HarvesterBuilding[] harvesterBuildings;
     }
 
     internal static class Events
@@ -52,9 +55,26 @@ namespace StardewValleyCustomMod
                 foreach (CustomBuilding building in playerBuildingsList.buildings)
                 {
                     building.load();//needed or no?
-                    //farm.buildings.Add(building.ConvertCustomBuildingToBuilding());
                     farm.buildings.Add((Building)building);
-                    StardewValleyCustomMod.FarmBuildings.Add(building);
+                    StardewValleyCustomMod.FarmBuildings.CustomBuildings.Add(building);
+                    if (StardewValleyCustomMod.Config.Debug)
+                        StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
+                    count++;
+                }
+                foreach (AnimalBuilding building in playerBuildingsList.animalBuildings)
+                {
+                    building.load();//needed or no?
+                    farm.buildings.Add((Building)building);
+                    StardewValleyCustomMod.FarmBuildings.AnimalBuildings.Add(building);
+                    if (StardewValleyCustomMod.Config.Debug)
+                        StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
+                    count++;
+                }
+                foreach (HarvesterBuilding building in playerBuildingsList.harvesterBuildings)
+                {
+                    building.load();//needed or no?
+                    farm.buildings.Add((Building)building);
+                    StardewValleyCustomMod.FarmBuildings.HarvesterBuildings.Add(building);
                     if (StardewValleyCustomMod.Config.Debug)
                         StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
                     count++;
@@ -73,7 +93,9 @@ namespace StardewValleyCustomMod
             PlayerSave playerBuildingsList = new PlayerSave();
             string fileName = Game1.player.name + "_" + Game1.uniqueIDForThisGame;
             List<Building> playerBuildings = new List<Building>();
-            List<CustomBuilding> buildings = new List<CustomBuilding>();
+            List<CustomBuilding> customBuildings = new List<CustomBuilding>();
+            List<AnimalBuilding> animalBuildings = new List<AnimalBuilding>();
+            List<HarvesterBuilding> harvesterBuildings = new List<HarvesterBuilding>();
 
             string filePath = Path.Combine(StardewValleyCustomMod.ModPath, "Saves", fileName + ".xml");
             XmlSerializer serializer = new XmlSerializer(typeof(PlayerSave));
@@ -88,25 +110,57 @@ namespace StardewValleyCustomMod
             {
                 if (building is CustomBuilding)
                 {
-                    StardewValleyCustomMod.Logger.Log($"AD-Height:{(building as CustomBuilding).animalDoorHeight}");
-                    buildings.Add(building as CustomBuilding);
-                    playerBuildings.Add(building);
+                    if (building is AnimalBuilding)
+                    {
+                        animalBuildings.Add(building as AnimalBuilding);
 
-                    if (StardewValleyCustomMod.Config.Debug)
-                        StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the custom building list.");
+                        if (StardewValleyCustomMod.Config.Debug)
+                            StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the animal building list.");
+                    }
+                    else if (building is HarvesterBuilding)
+                    {
+                        harvesterBuildings.Add(building as HarvesterBuilding);
+
+                        if (StardewValleyCustomMod.Config.Debug)
+                            StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the harvester building list.");
+                    }
+                    else
+                    {
+                        customBuildings.Add(building as CustomBuilding);
+
+                        if (StardewValleyCustomMod.Config.Debug)
+                            StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the custom building list.");
+                    }
+                    //StardewValleyCustomMod.Logger.Log($"AD-Height:{(building as CustomBuilding).animalDoorHeight}");
+
+                    playerBuildings.Add(building);   
                 }
             }
             
             // Remove buildings from the games farm building list so it does not save and try to load
-            foreach (CustomBuilding building in buildings)
+            foreach (CustomBuilding building in customBuildings)
             {
                 if (StardewValleyCustomMod.Config.Debug)
                     StardewValleyCustomMod.Logger.Log($"Removing {building.buildingType} from the building list.");
                 farm.buildings.Remove((Building) building);
             }
-            
+            foreach (AnimalBuilding building in animalBuildings)
+            {
+                if (StardewValleyCustomMod.Config.Debug)
+                    StardewValleyCustomMod.Logger.Log($"Removing {building.buildingType} from the building list.");
+                farm.buildings.Remove((Building)building);
+            }
+            foreach (HarvesterBuilding building in harvesterBuildings)
+            {
+                if (StardewValleyCustomMod.Config.Debug)
+                    StardewValleyCustomMod.Logger.Log($"Removing {building.buildingType} from the building list.");
+                farm.buildings.Remove((Building)building);
+            }
+
             // Save custom buildings to file
-            playerBuildingsList.buildings = buildings.ToArray();
+            playerBuildingsList.buildings = customBuildings.ToArray();
+            playerBuildingsList.animalBuildings = animalBuildings.ToArray();
+            playerBuildingsList.harvesterBuildings = harvesterBuildings.ToArray();
             serializer.Serialize(writer, playerBuildingsList);
             writer.Close();
             StardewValleyCustomMod.Logger.Log($"Save File created for '{fileName}'.");
