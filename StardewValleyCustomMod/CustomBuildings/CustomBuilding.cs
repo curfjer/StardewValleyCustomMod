@@ -143,9 +143,12 @@ namespace StardewValleyCustomMod
                     ((AnimalHouse)indoors1).animals = ((AnimalHouse)this.indoors).animals;
                     ((AnimalHouse)indoors1).animalsThatLiveHere = ((AnimalHouse)this.indoors).animalsThatLiveHere;
                     foreach (KeyValuePair<long, FarmAnimal> animal in (Dictionary<long, FarmAnimal>)((AnimalHouse)indoors1).animals)
+                    {
                         animal.Value.reload();
+                        //Game1.getFarm().animals.Add(animal.Key, animal.Value);// TODO do I need this for the animal to go outside
+                    }
                 }
-
+                
                 // TODO change this???
                 if (this.indoors is Shed)
                 {

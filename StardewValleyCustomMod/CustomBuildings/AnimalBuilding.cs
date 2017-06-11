@@ -145,6 +145,16 @@ namespace StardewValleyCustomMod
                 Game1.playSound("doorCreakReverse");
             this.animalDoorOpen = !this.animalDoorOpen;
             this.animalDoorMotion = this.animalDoorOpen ? -2 : 2;
+
+            StardewValleyCustomMod.Logger.Log("Checking for farm animals...");
+
+            
+            foreach (long key in Game1.getFarm().animals.Keys)
+            {
+                FarmAnimal animal;
+                Game1.getFarm().animals.TryGetValue(key, out animal);
+                StardewValleyCustomMod.Logger.Log($"Name: {animal.displayName}");
+            }
             return true;
         }
 

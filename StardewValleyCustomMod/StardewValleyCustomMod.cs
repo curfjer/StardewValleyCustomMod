@@ -102,6 +102,10 @@
  *    - ???
  *      
  *    controller support to access menu, variable for what button to press
+ *    
+ *    animals do not go outside
+ *    animals are unlocked through building the original animal buildings
+ *    - change to include custom
  */
 
 using System;
@@ -191,6 +195,10 @@ namespace StardewValleyCustomMod
             {
                 Logger.ExitGameImmediately("Unable to load custom tiles for the custom building menu!",err);
             }
+
+
+            PrivateInheritanceTest test = new PrivateInheritanceTest();
+            Logger.Log($"test PIT: {test.GetA()}");
         }
 
         private void ReceiveKeyPress(object sender, EventArgsKeyPressed e)

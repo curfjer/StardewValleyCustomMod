@@ -74,6 +74,8 @@
     <Compile Include="DropDownMenu.cs" />
     <Compile Include="Events.cs" />
     <Compile Include="Harvester.cs" />
+    <Compile Include="PrivateInheritanceTest.cs" />
+    <Compile Include="PrivateTest.cs" />
     <Compile Include="StardewValleyCustomMod.cs" />
     <Compile Include="CustomBuildableGameLocations.cs" />
     <Compile Include="BuildingStardew.cs" />

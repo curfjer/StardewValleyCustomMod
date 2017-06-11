@@ -99,6 +99,8 @@ namespace StardewValleyCustomMod.Menus
         private static int MAXZOOM = 4;
         private DropDownMenu SorterMenu;
         private String sorter;
+        private HarvesterBuilding currentHarvester;
+        private int selectedBuilding;
 
         public CustomBuildingsMenu()
         {
@@ -191,12 +193,21 @@ namespace StardewValleyCustomMod.Menus
             this.Logger.Log($"CurrentBlueprintIndex: {this.currentBlueprintIndex}"); // DEBUG REMOVE
             //this.currentBuilding = new Building(this.blueprints[this.currentBlueprintIndex], Vector2.Zero);
 
-            if(this.CurrentBlueprint.BlueprintType.Equals("Animal"))
+            if (this.CurrentBlueprint.BlueprintType.Equals("Animal"))
+            {
                 this.currentBuilding = new AnimalBuilding(this.CurrentBlueprint, Vector2.Zero);
-            else if(this.CurrentBlueprint.BlueprintType.Equals("Harvester"))
-                this.currentBuilding = new HarvesterBuilding(this.CurrentBlueprint, Vector2.Zero);
+                this.selectedBuilding = 0;
+            }
+            else if (this.CurrentBlueprint.BlueprintType.Equals("Harvester"))
+            {
+                this.currentHarvester = new HarvesterBuilding(this.CurrentBlueprint, Vector2.Zero);
+                this.selectedBuilding = 1;
+            }
             else
+            {
                 this.currentBuilding = new CustomBuilding(this.CurrentBlueprint, Vector2.Zero);
+                this.selectedBuilding = 0;
+            }
             this.price = this.blueprints[this.currentBlueprintIndex].MoneyRequired;
             this.ingredients.Clear();
             foreach (KeyValuePair<int, int> keyValuePair in this.blueprints[this.currentBlueprintIndex].ResourcesRequired)
@@ -619,16 +630,32 @@ namespace StardewValleyCustomMod.Menus
                 DelayedAction.fadeAfterDelay(new Game1.afterFadeFunction(this.returnToCarpentryMenu), 1500);
                 this.freeze = true;
             }
+            JunimoHut test = this.currentHarvester as JunimoHut;
+            Building test1 = test as Building;
         }
 
         public bool tryToBuild()
         {
             bool built = false;
             if (this.upgradeMode)
-                built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentBuilding, new Vector2(this.currentBuilding.tileX, this.currentBuilding.tileY), false, Game1.player);
-            else
+            {
+                if (this.selectedBuilding == 0)
+                    built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentBuilding, new Vector2(this.currentBuilding.tileX, this.currentBuilding.tileY), false, Game1.player);
+                else if (this.selectedBuilding == 1)
+                    built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentHarvester, new Vector2(this.currentHarvester.tileX, this.currentHarvester.tileY), false, Game1.player);
+            }
+            else if (this.selectedBuilding == 0)
+            {
                 built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentBuilding, new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize)), false, Game1.player);
-            this.currentBuilding.performActionOnConstruction((GameLocation)(BuildableGameLocation)Game1.getLocationFromName("Farm"));
+            }else if (this.selectedBuilding == 1)
+            {
+                built = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildStructure((Building)this.currentHarvester, new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize)), false, Game1.player);
+            }
+
+            if (this.selectedBuilding == 0)
+                this.currentBuilding.performActionOnConstruction((GameLocation)(BuildableGameLocation)Game1.getLocationFromName("Farm"));
+            else if (this.selectedBuilding == 1)
+                this.currentHarvester.performActionOnConstruction((GameLocation)(BuildableGameLocation)Game1.getLocationFromName("Farm"));
             return built;
         }
 
@@ -740,18 +767,29 @@ namespace StardewValleyCustomMod.Menus
                  * - (this.currentBuilding.texture.Bounds.Height / 2) * this.zoom
                  */
                 //this.currentBuilding.drawInMenu(b, this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - this.currentBuilding.tilesWide * Game1.tileSize / 2 - Game1.tileSize, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - this.currentBuilding.getSourceRectForMenu().Height * Game1.pixelZoom / 2, this.zoom);
-                float scalar = (float)this.maxWidthOfBuildingViewer / (float)this.currentBuilding.texture.Width;
+                int textureWidth = this.currentBuilding.texture.Width;
+                int textureHeight = this.currentBuilding.texture.Height;
+                if (this.selectedBuilding == 1)
+                {
+                    textureWidth = this.currentHarvester.texture.Width;
+                    textureHeight = this.currentHarvester.texture.Height;
+                }
+
+                float scalar = (float)this.maxWidthOfBuildingViewer / (float)textureWidth;
                 int shadowHeight = 16;
 
-                if ((this.currentBuilding.texture.Height + shadowHeight)* scalar > this.maxHeightOfBuildingViewer)
-                    scalar = (float)this.maxHeightOfBuildingViewer / (float)(this.currentBuilding.texture.Height + shadowHeight);
+                if ((textureHeight + shadowHeight)* scalar > this.maxHeightOfBuildingViewer)
+                    scalar = (float)this.maxHeightOfBuildingViewer / (float)(textureHeight + shadowHeight);
 
                 //this.currentBuilding.drawInMenu(b, this.xPositionOnScreen - Game1.tileSize - IClickableMenu.spaceToClearSideBorder, this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * this.zoom, this.zoom);
                 //else
-                Vector2 buildingPosition = new Vector2((int)(this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Width / 2) * scalar - Game1.tileSize), (int)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (this.currentBuilding.texture.Bounds.Height / 2) * scalar));
-                this.currentBuilding.drawInMenu(b, (int)buildingPosition.X, (int)buildingPosition.Y, scalar);
+                Vector2 buildingPosition = new Vector2((int)(this.xPositionOnScreen + this.maxWidthOfBuildingViewer / 2 - (textureWidth / 2) * scalar - Game1.tileSize), (int)(this.yPositionOnScreen + this.maxHeightOfBuildingViewer / 2 - (textureHeight / 2) * scalar));
+                if(selectedBuilding == 0)
+                    this.currentBuilding.drawInMenu(b, (int)buildingPosition.X, (int)buildingPosition.Y, scalar);
+                else if(selectedBuilding == 1)
+                    this.currentHarvester.drawInMenu(b, (int)buildingPosition.X, (int)buildingPosition.Y, scalar);
                 Microsoft.Xna.Framework.Rectangle farmerSize = new Microsoft.Xna.Framework.Rectangle(0, 0, 16, 32);
-                this.drawFarmer(b, buildingPosition + new Vector2(-farmerSize.Width / 2 * scalar, (this.currentBuilding.texture.Bounds.Height - farmerSize.Height) * scalar), scalar);
+                this.drawFarmer(b, buildingPosition + new Vector2(-farmerSize.Width / 2 * scalar, (textureHeight - farmerSize.Height) * scalar), scalar);
 
 
                 //
@@ -819,7 +857,12 @@ namespace StardewValleyCustomMod.Menus
                     }
                 }
                 else if (this.upgradeMode)
-                    this.DrawBuildingTiles(b, (Building)this.currentBuilding);
+                {
+                    if(this.selectedBuilding == 0)
+                        this.DrawBuildingTiles(b, (Building)this.currentBuilding);
+                    else if(this.selectedBuilding == 1)
+                        this.DrawBuildingTiles(b, (Building)this.currentHarvester);
+                }
                 else if (this.moving && this.buildingToMove != null)
                 {
                     this.DrawBuildingTiles(b, this.buildingToMove);
@@ -905,6 +948,7 @@ namespace StardewValleyCustomMod.Menus
             b.Draw(farmerRend.baseTexture, position + origin + positionOffset + farmer.armOffset, new Microsoft.Xna.Framework.Rectangle?(sourceRect), overrideColor, rotation, origin, scalar, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + (facingDirection != 0 ? 4.9E-05f : 0.0f));
         }
 
+        // I pass in the current building in the building parameter, do I need to use this.currentbuilding or can I switch it to building TODO
         public void DrawBuildingTiles(SpriteBatch b, Building building)
         {
             Vector2 vector2 = new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize));
@@ -976,7 +1020,7 @@ namespace StardewValleyCustomMod.Menus
             b.Draw(customTiles, location, new Microsoft.Xna.Framework.Rectangle(80, 0, 16, 16), Color.White, 0.0f, new Vector2(0.0f, 5.0f), (float)Game1.pixelZoom / 2, SpriteEffects.None, (float)0.0f);
             location.Y -= spaceBetweenFontLines;
             location.X += 16 * Game1.pixelZoom;
-            Utility.drawTextWithShadow(b, this.currentBuilding.tilesWide.ToString(), Game1.dialogueFont, location, this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+            Utility.drawTextWithShadow(b, this.CurrentBlueprint.TilesWidth.ToString(), Game1.dialogueFont, location, this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
             location.X -= 16 * Game1.pixelZoom;
 
             // Height
@@ -985,7 +1029,7 @@ namespace StardewValleyCustomMod.Menus
             b.Draw(customTiles, location, new Microsoft.Xna.Framework.Rectangle(64, 0, 16, 16), Color.White, 0.0f, new Vector2(0.0f, 5.0f), (float)Game1.pixelZoom / 2, SpriteEffects.None, (float)0.0f);
             location.Y -= spaceBetweenFontLines;
             location.X += 16 * Game1.pixelZoom;
-            Utility.drawTextWithShadow(b, this.currentBuilding.tilesHigh.ToString(), Game1.dialogueFont, location, this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
+            Utility.drawTextWithShadow(b, this.CurrentBlueprint.TilesHeight.ToString(), Game1.dialogueFont, location, this.magicalConstruction ? Color.PaleGoldenrod : Game1.textColor, 1f, -1f, -1, -1, this.magicalConstruction ? 0.0f : 0.25f, 3);
             location.X -= 16 * Game1.pixelZoom;
 
             // TODO what is the second vector for (name is origin)???
@@ -1014,7 +1058,7 @@ namespace StardewValleyCustomMod.Menus
             location.X -= 16 * Game1.pixelZoom;
 
             // Load max animal occupants - icon transition between animals?
-            if (this.currentBuilding.indoors is AnimalHouse)
+            if (this.currentBuilding.indoors is AnimalHouse && this.selectedBuilding == 0)
             {
                 location.Y += Game1.tileSize + spaceBetweenFontLines;
                 b.Draw(customTiles, location, new Microsoft.Xna.Framework.Rectangle(0, 65, 17, 13), Color.White, 0.0f, new Vector2(0.0f, 5.0f), (float)Game1.pixelZoom / 2, SpriteEffects.None, (float)0.0f);

@@ -117,13 +117,6 @@ namespace StardewValleyCustomMod
                         if (StardewValleyCustomMod.Config.Debug)
                             StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the animal building list.");
                     }
-                    else if (building is HarvesterBuilding)
-                    {
-                        harvesterBuildings.Add(building as HarvesterBuilding);
-
-                        if (StardewValleyCustomMod.Config.Debug)
-                            StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the harvester building list.");
-                    }
                     else
                     {
                         customBuildings.Add(building as CustomBuilding);
@@ -134,6 +127,15 @@ namespace StardewValleyCustomMod
                     //StardewValleyCustomMod.Logger.Log($"AD-Height:{(building as CustomBuilding).animalDoorHeight}");
 
                     playerBuildings.Add(building);   
+                }
+                else if (building is HarvesterBuilding)
+                {
+                    harvesterBuildings.Add(building as HarvesterBuilding);
+
+                    if (StardewValleyCustomMod.Config.Debug)
+                        StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the harvester building list.");
+
+                    playerBuildings.Add(building);
                 }
             }
             
