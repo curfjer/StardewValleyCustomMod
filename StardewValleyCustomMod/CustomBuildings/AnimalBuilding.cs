@@ -59,6 +59,41 @@ namespace CustomFarmBuildings
             this.animalDoor = new Point(this.AnimalDoorTileCoord.X, this.AnimalDoorTileCoord.Y + this.animalDoorHeight / this.textureBitSize - 1); // TODO uses pixelzoom change to scalar? 16, 32, 64 bit check
         }
 
+        public override void ConvertBuildingToCustomBuilding(Building building)
+        {
+            base.ConvertBuildingToCustomBuilding(building);
+
+            this.yPositionOfAnimalDoor = (building as AnimalBuilding).yPositionOfAnimalDoor;
+        }
+
+        public Building ConvertCustomBuildingToBuilding()
+        {
+            Barn building = new Barn();
+
+            building.color = this.color;
+            building.indoors = this.indoors;
+            building.texture = this.texture;
+            building.tileX = this.tileX;
+            building.tileY = this.tileY;
+            building.tilesWide = this.tilesWide;
+            building.tilesHigh = this.tilesHigh;
+            building.maxOccupants = this.maxOccupants;
+            building.currentOccupants = this.currentOccupants;
+            building.daysOfConstructionLeft = this.daysOfConstructionLeft;
+            building.daysUntilUpgrade = this.daysUntilUpgrade;
+            building.buildingType = "MOD_" + this.modName + "_" + this.buildingName;
+            building.nameOfIndoors = this.nameOfIndoors;
+            building.baseNameOfIndoors = this.baseNameOfIndoors;
+            building.nameOfIndoorsWithoutUnique = this.nameOfIndoorsWithoutUnique;
+            building.humanDoor = this.humanDoor;
+            building.animalDoor = this.animalDoor;
+            building.animalDoorOpen = this.animalDoorOpen;
+            building.magical = this.magical;
+            building.owner = this.owner;
+
+            return building;
+        }
+
         public override void load()
         {
             base.load();

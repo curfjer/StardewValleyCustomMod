@@ -126,7 +126,7 @@ namespace CustomFarmBuildings.CustomBuildings
         }
 
         // Change name TODO this grabs the values of the bulding and gives it to custombuilding
-        public void ConvertBuildingToCustomBuilding(Building building)
+        public void ConvertBuildingToCustomBuilding(JunimoHut building)
         {
             string[] modBuilding = building.buildingType.Split('_');
 
@@ -151,11 +151,13 @@ namespace CustomFarmBuildings.CustomBuildings
             this.animalDoorOpen = building.animalDoorOpen;
             this.magical = building.magical;
             this.owner = building.owner;
+
+            this.output = building.output;
         }
 
         public Building ConvertCustomBuildingToBuilding()
         {
-            Building building = new Building();
+            JunimoHut building = new JunimoHut();
 
             building.color = this.color;
             building.indoors = this.indoors;
@@ -177,6 +179,8 @@ namespace CustomFarmBuildings.CustomBuildings
             building.animalDoorOpen = this.animalDoorOpen;
             building.magical = this.magical;
             building.owner = this.owner;
+
+            building.output = this.output;
 
             return building;
         }

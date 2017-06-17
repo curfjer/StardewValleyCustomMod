@@ -118,7 +118,7 @@ namespace CustomFarmBuildings
         }
 
         // Change name TODO this grabs the values of the bulding and gives it to custombuilding
-        public void ConvertBuildingToCustomBuilding(Building building)
+        public virtual void ConvertBuildingToCustomBuilding(Building building)
         {
             string[] modBuilding = building.buildingType.Split('_');
 

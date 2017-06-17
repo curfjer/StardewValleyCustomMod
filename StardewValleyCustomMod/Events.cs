@@ -116,7 +116,7 @@ namespace CustomFarmBuildings
                         else if (blu.BlueprintType.Equals("Harvester"))
                         {
                             HarvesterBuilding harvesterBuilding = new HarvesterBuilding(blu, new Vector2(building.tileX, building.tileY));
-                            harvesterBuilding.ConvertBuildingToCustomBuilding(building);
+                            harvesterBuilding.ConvertBuildingToCustomBuilding(building as JunimoHut);
                             harvesterBuilding.load();
                             farm.buildings.Remove(building);
                             farm.buildings.Add(harvesterBuilding);
