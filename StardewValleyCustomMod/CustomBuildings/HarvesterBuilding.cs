@@ -125,6 +125,62 @@ namespace CustomFarmBuildings.CustomBuildings
             return new Rectangle(Utility.getSeasonNumber(Game1.currentSeason) * 48, 0, 48, 64);
         }
 
+        // Change name TODO this grabs the values of the bulding and gives it to custombuilding
+        public void ConvertBuildingToCustomBuilding(Building building)
+        {
+            string[] modBuilding = building.buildingType.Split('_');
+
+            this.color = building.color;
+            this.indoors = building.indoors;
+            this.texture = building.texture;
+            this.tileX = building.tileX;
+            this.tileY = building.tileY;
+            this.tilesWide = building.tilesWide;
+            this.tilesHigh = building.tilesHigh;
+            this.maxOccupants = building.maxOccupants;
+            this.currentOccupants = building.currentOccupants;
+            this.daysOfConstructionLeft = building.daysOfConstructionLeft;
+            this.daysUntilUpgrade = building.daysUntilUpgrade;
+            this.modName = modBuilding[0];
+            this.buildingType = modBuilding[1];
+            this.nameOfIndoors = building.nameOfIndoors;
+            this.baseNameOfIndoors = building.baseNameOfIndoors;
+            this.nameOfIndoorsWithoutUnique = building.nameOfIndoorsWithoutUnique;
+            this.humanDoor = building.humanDoor;
+            this.animalDoor = building.animalDoor;
+            this.animalDoorOpen = building.animalDoorOpen;
+            this.magical = building.magical;
+            this.owner = building.owner;
+        }
+
+        public Building ConvertCustomBuildingToBuilding()
+        {
+            Building building = new Building();
+
+            building.color = this.color;
+            building.indoors = this.indoors;
+            building.texture = this.texture;
+            building.tileX = this.tileX;
+            building.tileY = this.tileY;
+            building.tilesWide = this.tilesWide;
+            building.tilesHigh = this.tilesHigh;
+            building.maxOccupants = this.maxOccupants;
+            building.currentOccupants = this.currentOccupants;
+            building.daysOfConstructionLeft = this.daysOfConstructionLeft;
+            building.daysUntilUpgrade = this.daysUntilUpgrade;
+            building.buildingType = "MOD_" + this.modName + "_" + this.buildingName;
+            building.nameOfIndoors = this.nameOfIndoors;
+            building.baseNameOfIndoors = this.baseNameOfIndoors;
+            building.nameOfIndoorsWithoutUnique = this.nameOfIndoorsWithoutUnique;
+            building.humanDoor = this.humanDoor;
+            building.animalDoor = this.animalDoor;
+            building.animalDoorOpen = this.animalDoorOpen;
+            building.magical = this.magical;
+            building.owner = this.owner;
+
+            return building;
+        }
+
         // Load the custom building and its interior into memory
         public override void load()
         {

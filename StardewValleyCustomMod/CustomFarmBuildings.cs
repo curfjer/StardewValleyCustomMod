@@ -274,6 +274,20 @@ namespace CustomFarmBuildings
             CustomFarmBuildings.Logger.Log($"Did not find custom blueprint for {name}");
             return null;
         }
+
+        public CustomBuildingBlueprint GetCustomBuildingBlueprint(String mod, String building)
+        {
+            CustomFarmBuildings.Logger.Log($"Looking for {building} from {mod}");
+            foreach (CustomBuildingBlueprint blu in BlueprintList)
+            {
+                CustomFarmBuildings.Logger.Log($"Checking {blu.BuildingName}");
+                if (blu.BuildingName.Equals(building) && blu.ModName.Equals(mod))
+                    return blu;
+            }
+
+            CustomFarmBuildings.Logger.Log($"Did not find custom blueprint for {building} from {mod}");
+            return null;
+        }
     }
 
     public class Buildings

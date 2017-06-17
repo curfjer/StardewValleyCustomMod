@@ -45,7 +45,7 @@ namespace CustomFarmBuildings
             string fileName = Path.Combine(CustomFarmBuildings.ModPath, "Saves", saveGameName + ".xml");
             FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
             int count = 0;
-
+            /*
             // If save exists load save
             if (fs.Length > 0)
             {
@@ -85,6 +85,45 @@ namespace CustomFarmBuildings
             // Save does not exist, load nothing
             else
                 CustomFarmBuildings.Logger.Log($"No custom buildings found for {saveGameName}.");
+                */
+
+            BuildableGameLocation farm = (BuildableGameLocation)Game1.getLocationFromName("Farm");
+            List<Building> buildings = farm.buildings;
+            foreach (Building building in buildings)
+            {
+                if (building.buildingType.StartsWith("MOD"))
+                {
+                    String[] modBuildingInfo = building.buildingType.Split('_');
+                    CustomBuildingBlueprint blu = CustomFarmBuildings.Config.GetCustomBuildingBlueprint(modBuildingInfo[1], modBuildingInfo[2]);
+                    if (blu != null)
+                    {
+                        if (blu.BlueprintType.Equals("Building"))
+                        {
+                            CustomBuilding customBuilding = new CustomBuilding(blu, new Vector2(building.tileX, building.tileY));
+                            customBuilding.ConvertBuildingToCustomBuilding(building);
+                            customBuilding.load();
+                            farm.buildings.Remove(building);
+                            farm.buildings.Add(customBuilding);
+                        }
+                        else if (blu.BlueprintType.Equals("Animal"))
+                        {
+                            AnimalBuilding animalBuilding = new AnimalBuilding(blu, new Vector2(building.tileX, building.tileY));
+                            animalBuilding.ConvertBuildingToCustomBuilding(building);
+                            animalBuilding.load();
+                            farm.buildings.Remove(building);
+                            farm.buildings.Add(animalBuilding);
+                        }
+                        else if (blu.BlueprintType.Equals("Harvester"))
+                        {
+                            HarvesterBuilding harvesterBuilding = new HarvesterBuilding(blu, new Vector2(building.tileX, building.tileY));
+                            harvesterBuilding.ConvertBuildingToCustomBuilding(building);
+                            harvesterBuilding.load();
+                            farm.buildings.Remove(building);
+                            farm.buildings.Add(harvesterBuilding);
+                        }
+                    }
+                }
+            }
         }
 
         // Save and Remove Custom Buildings
@@ -138,25 +177,28 @@ namespace CustomFarmBuildings
                     playerBuildings.Add(building);
                 }
             }
-            
+
             // Remove buildings from the games farm building list so it does not save and try to load
             foreach (CustomBuilding building in customBuildings)
             {
                 if (CustomFarmBuildings.Config.Debug)
                     CustomFarmBuildings.Logger.Log($"Removing {building.buildingName} from the building list.");
                 farm.buildings.Remove((Building) building);
+                farm.buildings.Add(building.ConvertCustomBuildingToBuilding());
             }
             foreach (AnimalBuilding building in animalBuildings)
             {
                 if (CustomFarmBuildings.Config.Debug)
                     CustomFarmBuildings.Logger.Log($"Removing {building.buildingName} from the building list.");
                 farm.buildings.Remove((Building)building);
+                farm.buildings.Add(building.ConvertCustomBuildingToBuilding());
             }
             foreach (HarvesterBuilding building in harvesterBuildings)
             {
                 if (CustomFarmBuildings.Config.Debug)
                     CustomFarmBuildings.Logger.Log($"Removing {building.buildingName} from the building list.");
                 farm.buildings.Remove((Building)building);
+                farm.buildings.Add(building.ConvertCustomBuildingToBuilding());
             }
 
             // Save custom buildings to file
