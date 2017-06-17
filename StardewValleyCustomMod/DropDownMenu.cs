@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Menus;
 
-namespace StardewValleyCustomMod.Menus
+namespace CustomFarmBuildings.Menus
 {
     class DropDownMenu
     {
@@ -103,7 +103,7 @@ namespace StardewValleyCustomMod.Menus
                     // Draw highlighted box behind option
                     if (this.HoverCheck(i))
                     {
-                        StardewValleyCustomMod.Logger.Log("$");
+                        CustomFarmBuildings.Logger.Log("$");
                         IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(384, 396, 15, 15), (int)this.OptionsLocation.X, (int)(this.OptionsLocation.Y + ( i * FontHeight) * scalar), this.MaxStringLength + DropDownMenu.BorderBuffer, (int)(DropDownMenu.FontHeight * scalar), Color.Wheat, 1f, false);
                     }
                         

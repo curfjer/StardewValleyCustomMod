@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Buildings;
-using StardewValleyCustomMod.CustomBlueprints;
+using CustomFarmBuildings.CustomBlueprints;
 using xTile;
 
 
@@ -20,7 +20,7 @@ using xTile;
  * 
  * 
  */
-namespace StardewValleyCustomMod
+namespace CustomFarmBuildings
 {
     public class AnimalBuilding : CustomBuilding
     {
@@ -33,6 +33,8 @@ namespace StardewValleyCustomMod
         public int animalDoorHeight;
         public int animalDoorWidth;
         public Texture2D AnimalDoorTexture;
+        public Point AnimalDoorTileCoord;
+        public int AnimalDoorOverhang = 3; // TODO default 3, user can change? need to fix current door, does it have be divisible by 16?
 
         public AnimalBuilding()
         {
@@ -53,7 +55,8 @@ namespace StardewValleyCustomMod
             this.animalDoorHeight = blu.AnimalDoorHeight;
             this.AnimalDoorTexture = blu.AnimalDoorTexture;
             this.animalDoorOpen = false;
-            this.animalDoor = blu.AnimalDoorTileCoord;
+            this.AnimalDoorTileCoord = blu.AnimalDoorTileCoord;
+            this.animalDoor = new Point(this.AnimalDoorTileCoord.X, this.AnimalDoorTileCoord.Y + this.animalDoorHeight / this.textureBitSize - 1); // TODO uses pixelzoom change to scalar? 16, 32, 64 bit check
         }
 
         public override void load()
@@ -106,7 +109,7 @@ namespace StardewValleyCustomMod
             {
                 fragility = 2
             });
-            this.daysOfConstructionLeft = 3;
+            this.daysOfConstructionLeft = this.daysToConstruct;
         }
 
         public override void performActionOnUpgrade(GameLocation location)
@@ -136,24 +139,24 @@ namespace StardewValleyCustomMod
                 return base.doAction(tileLocation, who);
             //base.doAction(tileLocation, who); // this will return true, does that leave this method??? TODO
 
-            StardewValleyCustomMod.Logger.Log($"Selected Tiled: {tileLocation}");
-            StardewValleyCustomMod.Logger.Log($"tileX: {this.tileX}, animalDoorX: {this.animalDoor.X}, animalDoorW:{this.animalDoorWidth}");
+            CustomFarmBuildings.Logger.Log($"Selected Tiled: {tileLocation}");
+            CustomFarmBuildings.Logger.Log($"tileX: {this.tileX}, animalDoorX: {this.animalDoor.X}, animalDoorW:{this.animalDoorWidth}");
             // Animal Door Interaction
             if (!this.animalDoorOpen)
                 Game1.playSound("doorCreak");
             else
                 Game1.playSound("doorCreakReverse");
             this.animalDoorOpen = !this.animalDoorOpen;
-            this.animalDoorMotion = this.animalDoorOpen ? -2 : 2;
+            this.animalDoorMotion = this.animalDoorOpen ? -2 : 2; // TODO change to different values?
 
-            StardewValleyCustomMod.Logger.Log("Checking for farm animals...");
+            CustomFarmBuildings.Logger.Log("Checking for farm animals...");
 
             
             foreach (long key in Game1.getFarm().animals.Keys)
             {
                 FarmAnimal animal;
                 Game1.getFarm().animals.TryGetValue(key, out animal);
-                StardewValleyCustomMod.Logger.Log($"Name: {animal.displayName}");
+                CustomFarmBuildings.Logger.Log($"Name: {animal.displayName}");
             }
             return true;
         }
@@ -229,7 +232,7 @@ namespace StardewValleyCustomMod
                     if (this.animalDoorOpen && this.yPositionOfAnimalDoor <= -(this.animalDoorHeight * Game1.pixelZoom) + Game1.pixelZoom * 3) //pixelZoom * 3 is what base game uses, so keeping it consistent with the base game
                     {
                         this.animalDoorMotion = 0;
-                        this.yPositionOfAnimalDoor = -(this.animalDoorHeight * Game1.pixelZoom) + Game1.pixelZoom * 3;
+                        this.yPositionOfAnimalDoor = -(this.animalDoorHeight * Game1.pixelZoom) + Game1.pixelZoom * this.AnimalDoorOverhang;
                     }
                     else if (!this.animalDoorOpen && this.yPositionOfAnimalDoor >= 0)
                     {
@@ -284,7 +287,11 @@ namespace StardewValleyCustomMod
 
             this.drawShadow(b, -1, -1);
 
-            b.Draw(this.AnimalDoorTexture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX + this.animalDoor.X), (float)((this.tileY + this.tilesHigh))) * Game1.tileSize - new Vector2((float)0, (float)this.AnimalDoorTexture.Height * Game1.pixelZoom - this.yPositionOfAnimalDoor)), new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.AnimalDoorTexture.Height)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 0f);
+            //b.Draw(this.texture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX + this.animalDoor.X), (float)(this.tileY + this.animalDoor.Y - 1)) * (float)Game1.tileSize), new Rectangle?(new Rectangle(32, 112, 32, 16)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 1E-06f);
+            //b.Draw(this.texture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX + this.animalDoor.X), (float)(this.tileY + this.animalDoor.Y)) * (float)Game1.tileSize), new Rectangle?(new Rectangle(64, 112, 32, 16)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 1E-06f);
+
+            b.Draw(this.AnimalDoorTexture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX + this.animalDoor.X), (float)((this.tileY + this.tilesHigh))) * Game1.tileSize) - new Vector2(0, this.AnimalDoorTexture.Height) * this.textureScalar, new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X + this.animalDoorWidth, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.AnimalDoorTexture.Height)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 0f);
+            b.Draw(this.AnimalDoorTexture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX + this.animalDoor.X), (float)((this.tileY + this.tilesHigh))) * Game1.tileSize - new Vector2((float)0, (float)(this.AnimalDoorTexture.Height) * Game1.pixelZoom - this.yPositionOfAnimalDoor)), new Rectangle?(new Rectangle((int)this.animalDoorTileSheetCoords.X, (int)this.animalDoorTileSheetCoords.Y, this.animalDoorWidth, this.AnimalDoorTexture.Height)), Color.White * this.alpha, 0.0f, Vector2.Zero, 4f, SpriteEffects.None, 0.0000001f);
             b.Draw(this.texture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(this.tileX * Game1.tileSize), (float)(this.tileY * Game1.tileSize + this.tilesHigh * Game1.tileSize))), new Rectangle?(this.texture.Bounds), this.color * this.alpha, 0.0f, new Vector2(0.0f, 112f), 4f, SpriteEffects.None, (float)((this.tileY + this.tilesHigh) * Game1.tileSize) / 10000f);
 
             // Upgrading

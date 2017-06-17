@@ -11,9 +11,9 @@ using StardewValley.Buildings;
 using StardewValley.Characters;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
-using StardewValleyCustomMod.CustomBuildings;
+using CustomFarmBuildings.CustomBuildings;
 
-namespace StardewValleyCustomMod
+namespace CustomFarmBuildings
 {
     public class Harvester : JunimoHarvester
     {

@@ -1,0 +1,10 @@
+E:\Documents\Visual Studio 2017\Projects\StardewValleyCustomMod\StardewValleyCustomMod\bin\x86\Release\StardewValleyCustomMod.dll.config
+E:\Documents\Visual Studio 2017\Projects\StardewValleyCustomMod\StardewValleyCustomMod\bin\x86\Release\StardewValleyCustomMod.dll
+E:\Documents\Visual Studio 2017\Projects\StardewValleyCustomMod\StardewValleyCustomMod\bin\x86\Release\StardewValleyCustomMod.pdb
+E:\Documents\Visual Studio 2017\Projects\StardewValleyCustomMod\StardewValleyCustomMod\bin\x86\Release\EntoaroxFramework.dll
+E:\Documents\Visual Studio 2017\Projects\StardewValleyCustomMod\StardewValleyCustomMod\bin\x86\Release\Newtonsoft.Json.dll
+E:\Documents\Visual Studio 2017\Projects\StardewValleyCustomMod\StardewValleyCustomMod\bin\x86\Release\EntoaroxFramework.pdb
+E:\Documents\Visual Studio 2017\Projects\StardewValleyCustomMod\StardewValleyCustomMod\bin\x86\Release\Newtonsoft.Json.xml
+E:\Documents\Visual Studio 2017\Projects\StardewValleyCustomMod\StardewValleyCustomMod\obj\x86\Release\CustomFarmBuildings.csprojResolveAssemblyReference.cache
+E:\Documents\Visual Studio 2017\Projects\StardewValleyCustomMod\StardewValleyCustomMod\obj\x86\Release\StardewValleyCustomMod.dll
+E:\Documents\Visual Studio 2017\Projects\StardewValleyCustomMod\StardewValleyCustomMod\obj\x86\Release\StardewValleyCustomMod.pdb

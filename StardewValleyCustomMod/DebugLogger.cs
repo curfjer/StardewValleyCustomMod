@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValleyCustomMod.CustomBlueprints;
+using CustomFarmBuildings.CustomBlueprints;
 
-namespace StardewValleyCustomMod.Menus
+namespace CustomFarmBuildings.Menus
 {
     class DebugLogger
     {
@@ -16,7 +16,7 @@ namespace StardewValleyCustomMod.Menus
 
         public DebugLogger()
         {
-            Logger = StardewValleyCustomMod.Logger;
+            Logger = CustomFarmBuildings.Logger;
         }
 
         public void DebugBlueprintDetails(BluePrint blueprint, GameLocation blueprintIndoorLocation)

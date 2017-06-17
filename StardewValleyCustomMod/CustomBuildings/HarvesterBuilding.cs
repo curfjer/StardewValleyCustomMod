@@ -16,9 +16,9 @@ using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
-using StardewValleyCustomMod.CustomBlueprints;
+using CustomFarmBuildings.CustomBlueprints;
 
-namespace StardewValleyCustomMod.CustomBuildings
+namespace CustomFarmBuildings.CustomBuildings
 {
     public class HarvesterBuilding : JunimoHut
     {
@@ -47,6 +47,7 @@ namespace StardewValleyCustomMod.CustomBuildings
         public bool seasonal;
         public string fileName;
         public string folderName;
+        public string buildingName;
         public float scalar;
         public bool customConstruction;
         public int daysToConstruct;
@@ -71,7 +72,8 @@ namespace StardewValleyCustomMod.CustomBuildings
             this.folderName = blu.FolderName;
 
             // Building Info
-            this.buildingType = blu.BuildingName;
+            this.buildingType = blu.BuildingType;
+            this.buildingName = blu.BuildingName;
             this.tileX = (int)coord.X;
             this.tileY = (int)coord.Y;
             this.tilesWide = blu.TilesWidth;
@@ -196,8 +198,8 @@ namespace StardewValleyCustomMod.CustomBuildings
             this.myJunimos.Clear();
             this.wasLit = false;*/
 
-            StardewValleyCustomMod.Logger.Log($"ConstructionDays: {this.daysOfConstructionLeft}");
-            StardewValleyCustomMod.Logger.Log($"UpgradeDays: {this.daysUntilUpgrade}");
+            CustomFarmBuildings.Logger.Log($"ConstructionDays: {this.daysOfConstructionLeft}");
+            CustomFarmBuildings.Logger.Log($"UpgradeDays: {this.daysUntilUpgrade}");
 
             // TODO is this where I should put it?
             if (this.customConstruction)
@@ -369,9 +371,9 @@ namespace StardewValleyCustomMod.CustomBuildings
             GameLocation interior = null;
 
             // Get interior for custom building from the custom blueprint list
-            foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.Config.BlueprintList)
+            foreach (CustomBuildingBlueprint blu in CustomFarmBuildings.Config.BlueprintList)
             {
-                if (blu.BuildingName.Equals(this.buildingType) && blu.Interiors.Count > 0)
+                if (blu.BuildingName.Equals(this.buildingName) && blu.Interiors.Count > 0)
                 {
                     interior = blu.GetIndoors();
 
@@ -397,7 +399,7 @@ namespace StardewValleyCustomMod.CustomBuildings
             }
 
             // Building interior not found, interior is null
-            StardewValleyCustomMod.Logger.Log($"{this.nameOfIndoorsWithoutUnique} not found for {this.buildingType} from {this.modName}");
+            CustomFarmBuildings.Logger.Log($"{this.nameOfIndoorsWithoutUnique} not found for {this.buildingName} from {this.modName}");
             return interior;
         }
 

@@ -59,10 +59,6 @@
  *  
  *  info icon - make the circle bigger, but keep i the same size
  *  already built icon - maybe stagger houses on top of each other?
- *  
- *  I think I did this (UNTESTED) vvvv
- *  Is there a way to set default values after retrieve information from manifest
- *   -ex. user only sets filename, then default sets buildingname, folder name to the same as filename
  *   
  *   different textures for night - mainly for different lighting purposes? default might be good enough
  *   
@@ -106,6 +102,15 @@
  *    animals do not go outside
  *    animals are unlocked through building the original animal buildings
  *    - change to include custom
+ *    - allow custom animal choice for what can live in custom animal building
+ *    
+ *    Add requirements to unlock buildings
+ *    
+ *    Custom Building Shadows?
+ *    
+ *    Custom furniture/item interaction to open menu designated by manifest?
+ *    
+ *    hover over harvester or click button on harvester highlights tiles the harvester can reach?
  */
 
 using System;
@@ -119,15 +124,15 @@ using StardewModdingAPI.Events;
 using Entoarox.Framework;
 using Entoarox.Framework.Events;
 
-using StardewValleyCustomMod.Menus;
-using StardewValleyCustomMod.CustomBlueprints;
+using CustomFarmBuildings.Menus;
+using CustomFarmBuildings.CustomBlueprints;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
-using StardewValleyCustomMod.CustomBuildings;
+using CustomFarmBuildings.CustomBuildings;
 
-namespace StardewValleyCustomMod
+namespace CustomFarmBuildings
 {
-    class StardewValleyCustomMod : Mod
+    class CustomFarmBuildings : Mod
     {
         public bool shopReplaced;
         public bool menuOpen;
@@ -144,7 +149,7 @@ namespace StardewValleyCustomMod
         {
             this.Initialize(helper);
 
-            MoreEvents.BeforeSaving += Events.Save; // Remove custom buildings from the farm map and save them
+            SaveEvents.BeforeSave += Events.Save; // Remove custom buildings from the farm map and save them
             SaveEvents.AfterSave += Events.Load; // Load custom buildings from the save file
             SaveEvents.AfterLoad += Events.Load; // Load custom buildings from the save file
 
@@ -258,15 +263,15 @@ namespace StardewValleyCustomMod
 
         public CustomBuildingBlueprint GetCustomBuildingBlueprint(String name)
         {
-            StardewValleyCustomMod.Logger.Log($"Looking for {name}");
+            CustomFarmBuildings.Logger.Log($"Looking for {name}");
             foreach (CustomBuildingBlueprint blu in BlueprintList)
             {
-                StardewValleyCustomMod.Logger.Log($"Checking {blu.BuildingName}");
+                CustomFarmBuildings.Logger.Log($"Checking {blu.BuildingName}");
                 if (blu.BuildingName.Equals(name))
                     return blu;
             }
 
-            StardewValleyCustomMod.Logger.Log($"Did not find custom blueprint for {name}");
+            CustomFarmBuildings.Logger.Log($"Did not find custom blueprint for {name}");
             return null;
         }
     }

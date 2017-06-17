@@ -9,14 +9,14 @@ using Entoarox.Framework;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Locations;
-using StardewValleyCustomMod.CustomBlueprints;
+using CustomFarmBuildings.CustomBlueprints;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using StardewModdingAPI;
 using Microsoft.Xna.Framework;
-using StardewValleyCustomMod.CustomBuildings;
+using CustomFarmBuildings.CustomBuildings;
 
-namespace StardewValleyCustomMod
+namespace CustomFarmBuildings
 {
     [Serializable]
     public class PlayerSave
@@ -32,9 +32,9 @@ namespace StardewValleyCustomMod
         // TODO Need to create Save folder if dne
         internal static void Load(object s, EventArgs e)
         {
-            StardewValleyCustomMod.Logger.Log("Loading custom buildings...");
+            CustomFarmBuildings.Logger.Log("Loading custom buildings...");
 
-            StardewValleyCustomMod.Logger.Log($"Season: {Game1.currentSeason}");
+            CustomFarmBuildings.Logger.Log($"Season: {Game1.currentSeason}");
 
             XmlSerializer serializer = new XmlSerializer(typeof(PlayerSave));
             // TODO check these unknowns and understand them
@@ -42,7 +42,7 @@ namespace StardewValleyCustomMod
             serializer.UnknownAttribute += new XmlAttributeEventHandler(serializer_UnknownAttribute);
 
             string saveGameName = Game1.player.name + "_" + Game1.uniqueIDForThisGame;
-            string fileName = Path.Combine(StardewValleyCustomMod.ModPath, "Saves", saveGameName + ".xml");
+            string fileName = Path.Combine(CustomFarmBuildings.ModPath, "Saves", saveGameName + ".xml");
             FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
             int count = 0;
 
@@ -56,35 +56,35 @@ namespace StardewValleyCustomMod
                 {
                     building.load();//needed or no?
                     farm.buildings.Add((Building)building);
-                    StardewValleyCustomMod.FarmBuildings.CustomBuildings.Add(building);
-                    if (StardewValleyCustomMod.Config.Debug)
-                        StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
+                    CustomFarmBuildings.FarmBuildings.CustomBuildings.Add(building);
+                    if (CustomFarmBuildings.Config.Debug)
+                        CustomFarmBuildings.Logger.Log($"Loaded {building.buildingName} at {building.tileX}, {building.tileY}");
                     count++;
                 }
                 foreach (AnimalBuilding building in playerBuildingsList.animalBuildings)
                 {
                     building.load();//needed or no?
                     farm.buildings.Add((Building)building);
-                    StardewValleyCustomMod.FarmBuildings.AnimalBuildings.Add(building);
-                    if (StardewValleyCustomMod.Config.Debug)
-                        StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
+                    CustomFarmBuildings.FarmBuildings.AnimalBuildings.Add(building);
+                    if (CustomFarmBuildings.Config.Debug)
+                        CustomFarmBuildings.Logger.Log($"Loaded {building.buildingName} at {building.tileX}, {building.tileY}");
                     count++;
                 }
                 foreach (HarvesterBuilding building in playerBuildingsList.harvesterBuildings)
                 {
                     building.load();//needed or no?
                     farm.buildings.Add((Building)building);
-                    StardewValleyCustomMod.FarmBuildings.HarvesterBuildings.Add(building);
-                    if (StardewValleyCustomMod.Config.Debug)
-                        StardewValleyCustomMod.Logger.Log($"Loaded {building.buildingType} at {building.tileX}, {building.tileY}");
+                    CustomFarmBuildings.FarmBuildings.HarvesterBuildings.Add(building);
+                    if (CustomFarmBuildings.Config.Debug)
+                        CustomFarmBuildings.Logger.Log($"Loaded {building.buildingName} at {building.tileX}, {building.tileY}");
                     count++;
                 }
 
-                StardewValleyCustomMod.Logger.Log($"{count} of {playerBuildingsList.buildings.Length} Custom Buildings Loaded!");
+                CustomFarmBuildings.Logger.Log($"{count} of {playerBuildingsList.buildings.Length} Custom Buildings Loaded!");
             }
             // Save does not exist, load nothing
             else
-                StardewValleyCustomMod.Logger.Log($"No custom buildings found for {saveGameName}.");
+                CustomFarmBuildings.Logger.Log($"No custom buildings found for {saveGameName}.");
         }
 
         // Save and Remove Custom Buildings
@@ -97,11 +97,11 @@ namespace StardewValleyCustomMod
             List<AnimalBuilding> animalBuildings = new List<AnimalBuilding>();
             List<HarvesterBuilding> harvesterBuildings = new List<HarvesterBuilding>();
 
-            string filePath = Path.Combine(StardewValleyCustomMod.ModPath, "Saves", fileName + ".xml");
+            string filePath = Path.Combine(CustomFarmBuildings.ModPath, "Saves", fileName + ".xml");
             XmlSerializer serializer = new XmlSerializer(typeof(PlayerSave));
             TextWriter writer = new StreamWriter(filePath);
 
-            StardewValleyCustomMod.Logger.Log("Creating save file...");
+            CustomFarmBuildings.Logger.Log("Creating save file...");
 
             BuildableGameLocation farm = (BuildableGameLocation)Game1.getLocationFromName("Farm");
 
@@ -114,15 +114,15 @@ namespace StardewValleyCustomMod
                     {
                         animalBuildings.Add(building as AnimalBuilding);
 
-                        if (StardewValleyCustomMod.Config.Debug)
-                            StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the animal building list.");
+                        if (CustomFarmBuildings.Config.Debug)
+                            CustomFarmBuildings.Logger.Log($"Adding {(building as AnimalBuilding).buildingName} to the animal building list.");
                     }
                     else
                     {
                         customBuildings.Add(building as CustomBuilding);
 
-                        if (StardewValleyCustomMod.Config.Debug)
-                            StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the custom building list.");
+                        if (CustomFarmBuildings.Config.Debug)
+                            CustomFarmBuildings.Logger.Log($"Adding {(building as CustomBuilding).buildingName} to the custom building list.");
                     }
                     //StardewValleyCustomMod.Logger.Log($"AD-Height:{(building as CustomBuilding).animalDoorHeight}");
 
@@ -132,8 +132,8 @@ namespace StardewValleyCustomMod
                 {
                     harvesterBuildings.Add(building as HarvesterBuilding);
 
-                    if (StardewValleyCustomMod.Config.Debug)
-                        StardewValleyCustomMod.Logger.Log($"Adding {building.buildingType} to the harvester building list.");
+                    if (CustomFarmBuildings.Config.Debug)
+                        CustomFarmBuildings.Logger.Log($"Adding {(building as HarvesterBuilding).buildingName} to the harvester building list.");
 
                     playerBuildings.Add(building);
                 }
@@ -142,20 +142,20 @@ namespace StardewValleyCustomMod
             // Remove buildings from the games farm building list so it does not save and try to load
             foreach (CustomBuilding building in customBuildings)
             {
-                if (StardewValleyCustomMod.Config.Debug)
-                    StardewValleyCustomMod.Logger.Log($"Removing {building.buildingType} from the building list.");
+                if (CustomFarmBuildings.Config.Debug)
+                    CustomFarmBuildings.Logger.Log($"Removing {building.buildingName} from the building list.");
                 farm.buildings.Remove((Building) building);
             }
             foreach (AnimalBuilding building in animalBuildings)
             {
-                if (StardewValleyCustomMod.Config.Debug)
-                    StardewValleyCustomMod.Logger.Log($"Removing {building.buildingType} from the building list.");
+                if (CustomFarmBuildings.Config.Debug)
+                    CustomFarmBuildings.Logger.Log($"Removing {building.buildingName} from the building list.");
                 farm.buildings.Remove((Building)building);
             }
             foreach (HarvesterBuilding building in harvesterBuildings)
             {
-                if (StardewValleyCustomMod.Config.Debug)
-                    StardewValleyCustomMod.Logger.Log($"Removing {building.buildingType} from the building list.");
+                if (CustomFarmBuildings.Config.Debug)
+                    CustomFarmBuildings.Logger.Log($"Removing {building.buildingName} from the building list.");
                 farm.buildings.Remove((Building)building);
             }
 
@@ -165,15 +165,15 @@ namespace StardewValleyCustomMod
             playerBuildingsList.harvesterBuildings = harvesterBuildings.ToArray();
             serializer.Serialize(writer, playerBuildingsList);
             writer.Close();
-            StardewValleyCustomMod.Logger.Log($"Save File created for '{fileName}'.");
+            CustomFarmBuildings.Logger.Log($"Save File created for '{fileName}'.");
         }
 
         internal static void LoadMods()
         {
             try
             {
-                StardewValleyCustomMod.Logger.Log("Loading building mods...");
-                string baseDir = Path.Combine(StardewValleyCustomMod.ModPath, "buildingMods");
+                CustomFarmBuildings.Logger.Log("Loading building mods...");
+                string baseDir = Path.Combine(CustomFarmBuildings.ModPath, "buildingMods");
                 int count = 0;
                 Directory.CreateDirectory(baseDir);
 
@@ -190,19 +190,19 @@ namespace StardewValleyCustomMod
                         }
                         catch (Exception err)
                         {
-                            StardewValleyCustomMod.Logger.Log("Unable to load manifest, json is invalid:" + file);
+                            CustomFarmBuildings.Logger.Log("Unable to load manifest, json is invalid:" + file);
                             return;
                         }
                     }
                     else
                     {
-                        StardewValleyCustomMod.Logger.Log("Could not find a manifest.json in the " + dir + " directory, if this is intentional you can ignore this message", LogLevel.Warn);
+                        CustomFarmBuildings.Logger.Log("Could not find a manifest.json in the " + dir + " directory, if this is intentional you can ignore this message", LogLevel.Warn);
                     }
                 }
             }
             catch (Exception err)
             {
-                StardewValleyCustomMod.Logger.ExitGameImmediately("A unexpected error occured while loading custom building mod manifests", err);
+                CustomFarmBuildings.Logger.ExitGameImmediately("A unexpected error occured while loading custom building mod manifests", err);
             }
         }
 
@@ -215,22 +215,22 @@ namespace StardewValleyCustomMod
                 int count = 0;
 
                 // Loading Buildings from file
-                StardewValleyCustomMod.Logger.Log($"Loading Buildings from {mani.ModName}...");
+                CustomFarmBuildings.Logger.Log($"Loading Buildings from {mani.ModName}...");
                 foreach (CustomBuildingBlueprint blu in mani.CustomBuildingBlueprintList)
                 {
                     blu.SetModName(mani.ModName);
                     blu.SetDefaults();
-                    StardewValleyCustomMod.Config.BlueprintList.Add(blu);
+                    CustomFarmBuildings.Config.BlueprintList.Add(blu);
                     count++;
 
-                    if (StardewValleyCustomMod.Config.Debug)
-                        StardewValleyCustomMod.Logger.Log($"{blu.BuildingName} from {mani.ModName} added.");
+                    if (CustomFarmBuildings.Config.Debug)
+                        CustomFarmBuildings.Logger.Log($"{blu.BuildingName} from {mani.ModName} added.");
                 }
-                StardewValleyCustomMod.Logger.Log($"{count} buildings were added.");
+                CustomFarmBuildings.Logger.Log($"{count} buildings were added.");
             }
             catch (Exception err)
             {
-                StardewValleyCustomMod.Logger.Log(LogLevel.Error, "Unable to parse manifest.json from " + file, err);
+                CustomFarmBuildings.Logger.Log(LogLevel.Error, "Unable to parse manifest.json from " + file, err);
             }
             
             
@@ -241,12 +241,12 @@ namespace StardewValleyCustomMod
         // False: Returns null
         public static CustomBuildingBlueprint CustomBuildingCheck(Building building)
         {
-            if (StardewValleyCustomMod.Config.Debug)
-                StardewValleyCustomMod.Logger.Log($"Checking if {building.buildingType} is a custom building.");
+            if (CustomFarmBuildings.Config.Debug)
+                CustomFarmBuildings.Logger.Log($"Checking if {building.buildingType} is a custom building.");
             
 
             // Check the blueprint list for the building
-            foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.Config.BlueprintList)
+            foreach (CustomBuildingBlueprint blu in CustomFarmBuildings.Config.BlueprintList)
             {
                 if (building.buildingType.Equals(blu.ModName + "_" + blu.BuildingName))
                     return blu;
@@ -255,20 +255,20 @@ namespace StardewValleyCustomMod
             }
             
 
-            if (StardewValleyCustomMod.Config.Debug)
-                StardewValleyCustomMod.Logger.Log($"{building.buildingType} is not a custom building.");
+            if (CustomFarmBuildings.Config.Debug)
+                CustomFarmBuildings.Logger.Log($"{building.buildingType} is not a custom building.");
             return null;
         }
 
         private static void serializer_UnknownNode(object sender, XmlNodeEventArgs e)
         {
-            StardewValleyCustomMod.Logger.Log($"Unknown Node: {e.Name}, {e.Text}");
+            CustomFarmBuildings.Logger.Log($"Unknown Node: {e.Name}, {e.Text}");
         }
 
         private static void serializer_UnknownAttribute(object sender, XmlAttributeEventArgs e)
         {
             System.Xml.XmlAttribute attr = e.Attr;
-            StardewValleyCustomMod.Logger.Log($"Unknown Attribute: {attr.Name} - '{attr.Value}'");
+            CustomFarmBuildings.Logger.Log($"Unknown Attribute: {attr.Name} - '{attr.Value}'");
         }
     }
 

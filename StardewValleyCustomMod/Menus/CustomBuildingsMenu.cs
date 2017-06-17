@@ -41,15 +41,15 @@ using System.Linq;
 using xTile.Dimensions;
 using StardewValley;
 using StardewValley.Menus;
-using StardewValleyCustomMod.CustomBlueprints;
+using CustomFarmBuildings.CustomBlueprints;
 using StardewModdingAPI;
 using xTile;
 using StardewValley.TerrainFeatures;
 using System;
 using StardewValley.Tools;
-using StardewValleyCustomMod.CustomBuildings;
+using CustomFarmBuildings.CustomBuildings;
 
-namespace StardewValleyCustomMod.Menus
+namespace CustomFarmBuildings.Menus
 {
     public class CustomBuildingsMenu : IClickableMenu
     {
@@ -109,8 +109,8 @@ namespace StardewValleyCustomMod.Menus
             this.shopLocation = Game1.currentLocation;
             this.content = new LocalizedContentManager(Game1.content.ServiceProvider, "Mods\\StardewValleyCustomMod\\CustomBuildings");
             this.blueprints = new List<CustomBuildingBlueprint>();
-            this.Logger = StardewValleyCustomMod.Logger;
-            this.debug = StardewValleyCustomMod.Config.Debug;
+            this.Logger = CustomFarmBuildings.Logger;
+            this.debug = CustomFarmBuildings.Config.Debug;
             this.currentTab = 0;
             this.interior = false;
             this.upgradeMode = false;
@@ -120,10 +120,10 @@ namespace StardewValleyCustomMod.Menus
             this.Logger.Log("Loading Crafting Menu...");
 
             // TODO dont need this if I use CustomBuildingBlueprint since config has the list already
-            foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.Config.BlueprintList)
+            foreach (CustomBuildingBlueprint blu in CustomFarmBuildings.Config.BlueprintList)
             {
                 //this.blueprints.Add(blu.convertCustomBlueprintToBluePrint());
-                StardewValleyCustomMod.Debug.DebugCustomBlueprintValues(blu);
+                CustomFarmBuildings.Debug.DebugCustomBlueprintValues(blu);
                 blu.UpdateCurrentInterior(0);
                 blu.SetSourceRect();
                 this.blueprints.Add(blu);
@@ -138,30 +138,30 @@ namespace StardewValleyCustomMod.Menus
         // List display info
         private void DrawCoords()
         {
-            StardewValleyCustomMod.Logger.Log($"xPositionOnScreen: {this.xPositionOnScreen}");
-            StardewValleyCustomMod.Logger.Log($"yPositionOnScreen: {this.yPositionOnScreen}");
-            StardewValleyCustomMod.Logger.Log($"width: {this.width}");
-            StardewValleyCustomMod.Logger.Log($"height: {this.height}");
-            StardewValleyCustomMod.Logger.Log($"IClickableMenu.borderWidth: {IClickableMenu.borderWidth}");
-            StardewValleyCustomMod.Logger.Log($"IClickableMenu.spaceToClearSideBorder: {IClickableMenu.spaceToClearSideBorder}");
-            StardewValleyCustomMod.Logger.Log($"Game1.tilsSize: {Game1.tileSize}");
-            StardewValleyCustomMod.Logger.Log($"maxHeightOfBuildingViewer: {this.maxHeightOfBuildingViewer}");
-            StardewValleyCustomMod.Logger.Log($"Game1.pixelZoom: {Game1.pixelZoom}");
+            CustomFarmBuildings.Logger.Log($"xPositionOnScreen: {this.xPositionOnScreen}");
+            CustomFarmBuildings.Logger.Log($"yPositionOnScreen: {this.yPositionOnScreen}");
+            CustomFarmBuildings.Logger.Log($"width: {this.width}");
+            CustomFarmBuildings.Logger.Log($"height: {this.height}");
+            CustomFarmBuildings.Logger.Log($"IClickableMenu.borderWidth: {IClickableMenu.borderWidth}");
+            CustomFarmBuildings.Logger.Log($"IClickableMenu.spaceToClearSideBorder: {IClickableMenu.spaceToClearSideBorder}");
+            CustomFarmBuildings.Logger.Log($"Game1.tilsSize: {Game1.tileSize}");
+            CustomFarmBuildings.Logger.Log($"maxHeightOfBuildingViewer: {this.maxHeightOfBuildingViewer}");
+            CustomFarmBuildings.Logger.Log($"Game1.pixelZoom: {Game1.pixelZoom}");
 
-            StardewValleyCustomMod.Logger.Log("Buttons:");
+            CustomFarmBuildings.Logger.Log("Buttons:");
 
-            StardewValleyCustomMod.Logger.Log($"okButton - X: {this.okButton.bounds.X}, Y: {this.okButton.bounds.Y}, W: {this.okButton.bounds.Width} H: {this.okButton.bounds.Height}");
-            StardewValleyCustomMod.Logger.Log($"cancelButton - X: {this.cancelButton.bounds.X}, Y: {this.cancelButton.bounds.Y}, W: {this.cancelButton.bounds.Width} H: {this.cancelButton.bounds.Height}");
-            StardewValleyCustomMod.Logger.Log($"backButton - X: {this.backButton.bounds.X}, Y: {this.backButton.bounds.Y}, W: {this.backButton.bounds.Width} H: {this.backButton.bounds.Height}");
-            StardewValleyCustomMod.Logger.Log($"forwardButton - X: {this.forwardButton.bounds.X}, Y: {this.forwardButton.bounds.Y}, W: {this.forwardButton.bounds.Width} H: {this.forwardButton.bounds.Height}");
-            StardewValleyCustomMod.Logger.Log($"demolishButton - X: {this.demolishButton.bounds.X}, Y: {this.demolishButton.bounds.Y}, W: {this.demolishButton.bounds.Width} H: {this.demolishButton.bounds.Height}");
-            StardewValleyCustomMod.Logger.Log($"upgradeIcon - X: {this.upgradeIcon.bounds.X}, Y: {this.upgradeIcon.bounds.Y}, W: {this.upgradeIcon.bounds.Width} H: {this.upgradeIcon.bounds.Height}");
-            StardewValleyCustomMod.Logger.Log($"moveButton - X: {this.moveButton.bounds.X}, Y: {this.moveButton.bounds.Y}, W: {this.moveButton.bounds.Width} H: {this.moveButton.bounds.Height}");
+            CustomFarmBuildings.Logger.Log($"okButton - X: {this.okButton.bounds.X}, Y: {this.okButton.bounds.Y}, W: {this.okButton.bounds.Width} H: {this.okButton.bounds.Height}");
+            CustomFarmBuildings.Logger.Log($"cancelButton - X: {this.cancelButton.bounds.X}, Y: {this.cancelButton.bounds.Y}, W: {this.cancelButton.bounds.Width} H: {this.cancelButton.bounds.Height}");
+            CustomFarmBuildings.Logger.Log($"backButton - X: {this.backButton.bounds.X}, Y: {this.backButton.bounds.Y}, W: {this.backButton.bounds.Width} H: {this.backButton.bounds.Height}");
+            CustomFarmBuildings.Logger.Log($"forwardButton - X: {this.forwardButton.bounds.X}, Y: {this.forwardButton.bounds.Y}, W: {this.forwardButton.bounds.Width} H: {this.forwardButton.bounds.Height}");
+            CustomFarmBuildings.Logger.Log($"demolishButton - X: {this.demolishButton.bounds.X}, Y: {this.demolishButton.bounds.Y}, W: {this.demolishButton.bounds.Width} H: {this.demolishButton.bounds.Height}");
+            CustomFarmBuildings.Logger.Log($"upgradeIcon - X: {this.upgradeIcon.bounds.X}, Y: {this.upgradeIcon.bounds.Y}, W: {this.upgradeIcon.bounds.Width} H: {this.upgradeIcon.bounds.Height}");
+            CustomFarmBuildings.Logger.Log($"moveButton - X: {this.moveButton.bounds.X}, Y: {this.moveButton.bounds.Y}, W: {this.moveButton.bounds.Width} H: {this.moveButton.bounds.Height}");
         }
 
         private void resetBounds()
         {
-            Texture2D customTiles = StardewValleyCustomMod.CustomTiles;
+            Texture2D customTiles = CustomFarmBuildings.CustomTiles;
 
             this.xPositionOnScreen = Game1.viewport.Width / 2 - this.maxWidthOfBuildingViewer - IClickableMenu.spaceToClearSideBorder;
             this.yPositionOnScreen = Game1.viewport.Height / 2 - this.maxHeightOfBuildingViewer / 2 - IClickableMenu.spaceToClearTopBorder + Game1.tileSize / 2;
@@ -273,9 +273,15 @@ namespace StardewValleyCustomMod.Menus
                 foreach (Building building in ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildings)
                     building.color = Color.White;
                 Building building1 = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).getBuildingAt(new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize))) ?? ((BuildableGameLocation)Game1.getLocationFromName("Farm")).getBuildingAt(new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY() + Game1.tileSize * 2) / Game1.tileSize))) ?? ((BuildableGameLocation)Game1.getLocationFromName("Farm")).getBuildingAt(new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY() + Game1.tileSize * 3) / Game1.tileSize)));
+                String buildingName = "";
+                if (building1 is CustomBuilding)
+                    buildingName = (building1 as CustomBuilding).buildingName;
+                else if (building1 is AnimalBuilding)
+                    buildingName = (building1 as HarvesterBuilding).buildingName;
+
                 if (this.upgrading)
                 {
-                    if (building1 != null && this.CurrentBlueprint.NameOfBuildingToUpgrade != null && this.CurrentBlueprint.NameOfBuildingToUpgrade.Equals(building1.buildingType))
+                    if (building1 != null && this.CurrentBlueprint.NameOfBuildingToUpgrade != null && this.CurrentBlueprint.NameOfBuildingToUpgrade.Equals(buildingName))
                     {
                         building1.color = Color.Lime * 0.8f;
                     }
@@ -531,7 +537,7 @@ namespace StardewValleyCustomMod.Menus
                 }
                 else if (this.tryToBuild())
                 {
-                    this.Logger.Log($"Successfully started building the {currentBuilding.buildingType}"); // DEBUG REMOVE
+                    this.Logger.Log($"Successfully started building the {currentBuilding.buildingName}"); // DEBUG REMOVE
                     this.CurrentBlueprint.consumeResources();
                     DelayedAction.fadeAfterDelay(new Game1.afterFadeFunction(this.returnToCarpentryMenuAfterSuccessfulBuild), 2000);
                     this.freeze = true;
@@ -546,7 +552,13 @@ namespace StardewValleyCustomMod.Menus
             if (!this.upgradeMode)
             {
                 Building buildingAt = ((BuildableGameLocation)Game1.getLocationFromName("Farm")).getBuildingAt(new Vector2((float)((Game1.viewport.X + Game1.getOldMouseX()) / Game1.tileSize), (float)((Game1.viewport.Y + Game1.getOldMouseY()) / Game1.tileSize)));
-                if (buildingAt != null && this.CurrentBlueprint.BuildingName != null && /*buildingAt.buildingType.Split('_').GetValue(1)*/buildingAt.buildingType.Equals(this.CurrentBlueprint.NameOfBuildingToUpgrade))
+                String buildingName = "";
+                if (buildingAt is CustomBuilding)
+                    buildingName = (buildingAt as CustomBuilding).buildingName;
+                else if(buildingAt is HarvesterBuilding)
+                    buildingName = (buildingAt as HarvesterBuilding).buildingName;
+
+                if (buildingAt != null && this.CurrentBlueprint.BuildingName != null && buildingName.Equals(this.CurrentBlueprint.NameOfBuildingToUpgrade))
                 {
                     this.upgradeMode = true;
                     this.buildingToUpgrade = buildingAt;
@@ -981,7 +993,14 @@ namespace StardewValleyCustomMod.Menus
                     if (!(Game1.currentLocation as BuildableGameLocation).isBuildable(tileLocation))
                         ++structurePlacementTile;
                     if(this.buildingToUpgrade.tileX <= tileLocation.X && this.buildingToUpgrade.tileX + this.buildingToUpgrade.tilesWide - 1 >= tileLocation.X && this.buildingToUpgrade.tileY <= tileLocation.Y && this.buildingToUpgrade.tileY + this.buildingToUpgrade.tilesHigh - 1 >= tileLocation.Y)
-                        b.Draw(StardewValleyCustomMod.CustomTiles, Game1.GlobalToLocal(Game1.viewport, tileLocation * (float)Game1.tileSize), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(0, 115, 16, 16)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
+                    {
+                        if(x == building.animalDoor.X && y == building.animalDoor.Y )
+                            b.Draw(CustomFarmBuildings.CustomTiles, Game1.GlobalToLocal(Game1.viewport, tileLocation * (float)Game1.tileSize), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(32, 115, 16, 16)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
+                        else if(x == building.humanDoor.X && y == building.humanDoor.Y)
+                            b.Draw(CustomFarmBuildings.CustomTiles, Game1.GlobalToLocal(Game1.viewport, tileLocation * (float)Game1.tileSize), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(16, 115, 16, 16)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
+                        else
+                            b.Draw(CustomFarmBuildings.CustomTiles, Game1.GlobalToLocal(Game1.viewport, tileLocation * (float)Game1.tileSize), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(0, 115, 16, 16)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
+                    }
                     else
                     b.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, tileLocation * (float)Game1.tileSize), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(194 + structurePlacementTile * 16, 388, 16, 16)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 0.999f);
                 }
@@ -1011,7 +1030,7 @@ namespace StardewValleyCustomMod.Menus
             int spaceBetweenFontLines = 16;
 
             // Make a global for this?
-            Texture2D customTiles = StardewValleyCustomMod.CustomTiles;
+            Texture2D customTiles = CustomFarmBuildings.CustomTiles;
             
             Vector2 location = new Vector2((float)(this.xPositionOnScreen + this.maxWidthOfDescription + Game1.tileSize), (float)(this.yPositionOnScreen + Game1.tileSize * 5 / 4 + Game1.pixelZoom * 4));
 
@@ -1165,7 +1184,7 @@ namespace StardewValleyCustomMod.Menus
             }
             else
             {
-                StardewValleyCustomMod.Debug.DebugCustomBlueprintValues(blueprint);
+                CustomFarmBuildings.Debug.DebugCustomBlueprintValues(blueprint);
                 //blueprintIndoorLocation = null;
                 return new Building(blueprint.ModName + "_" + blueprint.BuildingName, "null", (int)Vector2.Zero.X, (int)Vector2.Zero.Y,
                 blueprint.TilesWidth, blueprint.TilesHeight, blueprint.HumanDoorTileCoord, blueprint.AnimalDoorTileCoord,
@@ -1190,7 +1209,7 @@ namespace StardewValleyCustomMod.Menus
                 this.Logger.Log($"Location is: {blueprint.mapToWarpTo}");
             }
 
-            foreach (CustomBuildingBlueprint blu in StardewValleyCustomMod.Config.BlueprintList)
+            foreach (CustomBuildingBlueprint blu in CustomFarmBuildings.Config.BlueprintList)
             {
                 if (blu.BuildingName.Equals(blueprint.name))
                 {
@@ -1212,7 +1231,7 @@ namespace StardewValleyCustomMod.Menus
 
             if (!interior)
             {
-                StardewValleyCustomMod.Logger.Log($"Initial Interior Load...");
+                CustomFarmBuildings.Logger.Log($"Initial Interior Load...");
 
                 this.hoverText = ""; // TODO outside of if or in here?
 
@@ -1237,7 +1256,7 @@ namespace StardewValleyCustomMod.Menus
 
             // TODO Remove it after you go back to menu
             // TODO make sure the location is not duped
-            StardewValleyCustomMod.Debug.DebugGame1LocationsList(Game1.locations);
+            CustomFarmBuildings.Debug.DebugGame1LocationsList(Game1.locations);
             this.Logger.Log($"currentLocation: {Game1.currentLocation.name}");
 
             Game1.viewport.Location = new Location(49 * Game1.tileSize, 5 * Game1.tileSize); // ???
@@ -1289,7 +1308,7 @@ namespace StardewValleyCustomMod.Menus
             }
             else
             {
-                StardewValleyCustomMod.Logger.Log($"Error - invalid tab selected: {this.currentTab}");
+                CustomFarmBuildings.Logger.Log($"Error - invalid tab selected: {this.currentTab}");
             }
         }
     }

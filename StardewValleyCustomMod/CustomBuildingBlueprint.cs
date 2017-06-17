@@ -17,8 +17,9 @@ using Entoarox.Framework;
 using System.IO;
 using StardewValley.Locations;
 using StardewValley.Buildings;
+using CustomFarmBuildings.CustomBuildings;
 
-namespace StardewValleyCustomMod.CustomBlueprints
+namespace CustomFarmBuildings.CustomBlueprints
 {
     public class CustomBuildingBlueprint
     {
@@ -71,6 +72,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
         public int GoldRequired;
         public int IridiumRequired;
         public string BlueprintType;
+        public string BuildingType;
         public Texture2D texture;
         private Rectangle sourceRectForMenuView;
         private bool canBuildOnCurrentMap;
@@ -118,6 +120,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
 
             this.ActionBehavior = "Farm";
             this.BlueprintType = "Buildings";
+            this.BuildingType = "";
 
             this.CurrentInteriorIndex = 0;
         }
@@ -187,10 +190,10 @@ namespace StardewValleyCustomMod.CustomBlueprints
             BluePrint blueprint = new BluePrint("Shed");
             this.LoadCustomBuildingBlueprint();
 
-            StardewValleyCustomMod.Logger.Log($"The building blueprint for {this.BuildingName} loaded with {blueprint.texture.ToString()} and {this.texture.ToString()}!");
+            CustomFarmBuildings.Logger.Log($"The building blueprint for {this.BuildingName} loaded with {blueprint.texture.ToString()} and {this.texture.ToString()}!");
 
-            if (StardewValleyCustomMod.Config.Debug)
-                StardewValleyCustomMod.Debug.DebugCustomBlueprintValues(this);
+            if (CustomFarmBuildings.Config.Debug)
+                CustomFarmBuildings.Debug.DebugCustomBlueprintValues(this);
 
             // Change dummy blueprint to the current custom blueprint
             blueprint.namesOfOkayBuildingLocations = this.namesOfOkayBuildingLocations;
@@ -228,14 +231,17 @@ namespace StardewValleyCustomMod.CustomBlueprints
             this.content = new LocalizedContentManager(Game1.content.ServiceProvider, Path.Combine("Mods\\StardewValleyCustomMod\\buildingMods", this.ModName, this.FolderName));
             try
             {
-                this.texture = content.Load<Texture2D>(this.FileName);
+                if(this.Seasonal)
+                    this.texture = content.Load<Texture2D>(this.FileName + "_" + Game1.currentSeason);
+                else
+                    this.texture = content.Load<Texture2D>(this.FileName);
                 if (this.BlueprintType.Equals("Animal"))
                     this.AnimalDoorTexture = content.Load<Texture2D>(this.FileName + "_AnimalDoor");
-                StardewValleyCustomMod.Logger.Log($"The building blueprint for {this.BuildingName} loaded with texture!"); //DEBUG REMOVE
+                CustomFarmBuildings.Logger.Log($"The building blueprint for {this.BuildingName} loaded with texture!"); //DEBUG REMOVE
             }
             catch (Exception ex)
             {
-                StardewValleyCustomMod.Logger.ExitGameImmediately($"The building blueprint for {this.BuildingName} loaded with no texture!",ex);
+                CustomFarmBuildings.Logger.ExitGameImmediately($"The building blueprint for {this.BuildingName} loaded with no texture!",ex);
             }
             this.sourceRectForMenuView = new Rectangle(0, 0, this.SourceRectHeight, this.SourceRectWidth);
         }
@@ -245,12 +251,12 @@ namespace StardewValleyCustomMod.CustomBlueprints
         {
             UpdateCurrentInterior(0); // TODO Find a better spot for this
             
-            String interiorPath = Path.Combine(StardewValleyCustomMod.ModPath, "buildingMods", this.ModName, this.FolderName, this.CurrentInterior.FileName);
-            StardewValleyCustomMod.Logger.Log($"{interiorPath}");
+            String interiorPath = Path.Combine(CustomFarmBuildings.ModPath, "buildingMods", this.ModName, this.FolderName, this.CurrentInterior.FileName);
+            CustomFarmBuildings.Logger.Log($"{interiorPath}");
             try
             {
                 GameLocation interior;
-                StardewValleyCustomMod.ContentRegistry.RegisterXnb(interiorPath, interiorPath);
+                CustomFarmBuildings.ContentRegistry.RegisterXnb(interiorPath, interiorPath);
                 xTile.Map map = Game1.content.Load<xTile.Map>(interiorPath);
                 switch (this.CurrentInterior.Type)
                 {
@@ -290,13 +296,13 @@ namespace StardewValleyCustomMod.CustomBlueprints
                 if(!Game1.locations.Contains(interior))
                 {
                     Game1.locations.Add(interior);
-                    StardewValleyCustomMod.Logger.Log($"Added {this.CurrentInterior.Name}");
+                    CustomFarmBuildings.Logger.Log($"Added {this.CurrentInterior.Name}");
                 }
                 return interior;
             }
             catch (Exception err)
             {
-                StardewValleyCustomMod.Logger.ExitGameImmediately("Unable to add custom location, a unexpected error occured: " + "Winery" + err);
+                CustomFarmBuildings.Logger.ExitGameImmediately("Unable to add custom location, a unexpected error occured: " + "Winery" + err);
             }
             return null;
         }
@@ -304,9 +310,9 @@ namespace StardewValleyCustomMod.CustomBlueprints
         // TODO Change or add another method that accepts a parameter to either go up or down the interior array
         public void UpdateCurrentInterior(int increment)
         {
-            StardewValleyCustomMod.Logger.Log($"UpdateCurrentInterior...");
-            StardewValleyCustomMod.Logger.Log($"Index: {this.CurrentInteriorIndex}");
-            StardewValleyCustomMod.Logger.Log($"Increment: {increment}");
+            CustomFarmBuildings.Logger.Log($"UpdateCurrentInterior...");
+            CustomFarmBuildings.Logger.Log($"Index: {this.CurrentInteriorIndex}");
+            CustomFarmBuildings.Logger.Log($"Increment: {increment}");
             if (this.CurrentInteriorIndex + increment >= this.Interiors.Count)
                 this.CurrentInteriorIndex = 0;
             else if (this.CurrentInteriorIndex + increment < 0)
@@ -314,7 +320,7 @@ namespace StardewValleyCustomMod.CustomBlueprints
             else
                 this.CurrentInteriorIndex += increment;
 
-            StardewValleyCustomMod.Logger.Log($"UpdatedIndex: {this.CurrentInteriorIndex}");
+            CustomFarmBuildings.Logger.Log($"UpdatedIndex: {this.CurrentInteriorIndex}");
 
             this.CurrentInterior = this.GetCustomInterior();
         }
@@ -327,13 +333,13 @@ namespace StardewValleyCustomMod.CustomBlueprints
         public void SetSourceRect()
         {
             this.sourceRectForMenuView = new Rectangle(0, 0, this.SourceRectWidth, this.SourceRectHeight);
-            StardewValleyCustomMod.Logger.Log($"SourceRect: {this.sourceRectForMenuView.ToString()}");
+            CustomFarmBuildings.Logger.Log($"SourceRect: {this.sourceRectForMenuView.ToString()}");
         }
 
         public GameLocation LoadCustomTileSheets(GameLocation interior)
         {
             Texture2D sheet = null;
-            string filePathStart = Path.Combine(StardewValleyCustomMod.ModPath, "buildingMods", this.ModName, this.FolderName);
+            string filePathStart = Path.Combine(CustomFarmBuildings.ModPath, "buildingMods", this.ModName, this.FolderName);
             string filePath = filePathStart;
 
             foreach (CustomTileSheets tileSheet in CustomTileSheets)
@@ -344,24 +350,24 @@ namespace StardewValleyCustomMod.CustomBlueprints
                     filePath = Path.Combine(filePath, tileSheet.FileName);
                     if (tileSheet.Seasonal)
                         filePath = Path.Combine(filePath, "_", Game1.currentSeason);
-                    StardewValleyCustomMod.Logger.Log($"FilePath: {filePath}");
-                    StardewValleyCustomMod.ContentRegistry.RegisterXnb(filePath, filePath);
+                    CustomFarmBuildings.Logger.Log($"FilePath: {filePath}");
+                    CustomFarmBuildings.ContentRegistry.RegisterXnb(filePath, filePath);
 
                     if (interior.map.GetTileSheet(tileSheet.SheetID) != null)
                     {
                         interior.map.GetTileSheet(tileSheet.SheetID).ImageSource = filePath;
-                        StardewValleyCustomMod.Logger.Log($"{tileSheet.FileName}{(tileSheet.Seasonal ? "_seasonal" : "")}/override", LogLevel.Trace);
+                        CustomFarmBuildings.Logger.Log($"{tileSheet.FileName}{(tileSheet.Seasonal ? "_seasonal" : "")}/override", LogLevel.Trace);
                     }
                     else
                     {
                         sheet = Game1.content.Load<Texture2D>(filePath);
                         interior.map.AddTileSheet(new xTile.Tiles.TileSheet(tileSheet.SheetID, interior.map, filePath, new xTile.Dimensions.Size((int)Math.Ceiling(sheet.Width / 16.0), (int)Math.Ceiling(sheet.Height / 16.0)), new xTile.Dimensions.Size(16, 16)));
-                        StardewValleyCustomMod.Logger.Log($"{tileSheet.FileName}{(tileSheet.Seasonal ? "_seasonal" : "")}/add", LogLevel.Trace);
+                        CustomFarmBuildings.Logger.Log($"{tileSheet.FileName}{(tileSheet.Seasonal ? "_seasonal" : "")}/add", LogLevel.Trace);
                     }
                 }
                 catch (Exception err)
                 {
-                    StardewValleyCustomMod.Logger.ExitGameImmediately($"Unable to load tilesheet '{tileSheet.FileName}' for {interior.name}", err);
+                    CustomFarmBuildings.Logger.ExitGameImmediately($"Unable to load tilesheet '{tileSheet.FileName}' for {interior.name}", err);
                 }
                 
             }
@@ -392,10 +398,27 @@ namespace StardewValleyCustomMod.CustomBlueprints
 
             foreach (Building building in ((BuildableGameLocation)Game1.getLocationFromName("Farm")).buildings)
             {
+                /*
                 if (building.buildingType.Equals(this.ModName + "_" + this.BuildingName))
                 {
                     buildingCount[0]++;
                     if(this.HasInterior())
+                        if (building.nameOfIndoorsWithoutUnique.Equals(this.CurrentInterior.Name))
+                            buildingCount[1]++;
+                }*/
+
+                if(building is CustomBuilding)
+                {
+                    if(this.ModName.Equals((building as CustomBuilding).modName) && this.BuildingName.Equals((building as CustomBuilding).buildingName))
+                    buildingCount[0]++;
+                    if (this.HasInterior())
+                        if (building.nameOfIndoorsWithoutUnique.Equals(this.CurrentInterior.Name))
+                            buildingCount[1]++;
+                }else if (building is HarvesterBuilding)
+                {
+                    if (this.ModName.Equals((building as HarvesterBuilding).modName) && this.BuildingName.Equals((building as HarvesterBuilding).buildingName))
+                        buildingCount[0]++;
+                    if (this.HasInterior())
                         if (building.nameOfIndoorsWithoutUnique.Equals(this.CurrentInterior.Name))
                             buildingCount[1]++;
                 }

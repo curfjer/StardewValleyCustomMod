@@ -76,7 +76,7 @@
     <Compile Include="Harvester.cs" />
     <Compile Include="PrivateInheritanceTest.cs" />
     <Compile Include="PrivateTest.cs" />
-    <Compile Include="StardewValleyCustomMod.cs" />
+    <Compile Include="CustomFarmBuildings.cs" />
     <Compile Include="CustomBuildableGameLocations.cs" />
     <Compile Include="BuildingStardew.cs" />
     <Compile Include="CustomBuildingBlueprint.cs" />

@@ -15,7 +15,7 @@ using System.Xml.Serialization;
 using xTile;
 using StardewValley;
 
-namespace StardewValleyCustomMod.CustomBuildings
+namespace CustomFarmBuildings.CustomBuildings
 {/*
     [XmlInclude(typeof(Coop))]
     [XmlInclude(typeof(Barn))]

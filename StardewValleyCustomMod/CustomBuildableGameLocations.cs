@@ -13,9 +13,9 @@ using System.Collections.Generic;
 using xTile;
 using xTile.Dimensions;
 using StardewValley;
-using StardewValleyCustomMod.CustomBuildings;
+using CustomFarmBuildings.CustomBuildings;
 
-namespace StardewValleyCustomMod.Locations
+namespace CustomFarmBuildings.Locations
 {
     public class CustomBuildableGameLocation : GameLocation
     {
