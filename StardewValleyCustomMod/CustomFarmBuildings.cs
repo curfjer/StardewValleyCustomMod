@@ -66,6 +66,7 @@
  *   
  *   manifest changes are not applied to building already built
  *   - need to have a check for current buildings and the blueprints on load (so start of every day) and change any values that are different from blueprint
+ *   - this might be fixed with the new save/load
  *   
  *   Support different texture sizes
  *    - 16 (base)(*4), 32(*2), 64(*1)
@@ -111,6 +112,9 @@
  *    Custom furniture/item interaction to open menu designated by manifest?
  *    
  *    hover over harvester or click button on harvester highlights tiles the harvester can reach?
+ *    
+ *    Warp buildings (Obelisks)
+ *    - warp to any given location (map and coords given)
  */
 
 using System;
@@ -217,7 +221,7 @@ namespace CustomFarmBuildings
                 {
                     Game1.activeClickableMenu = (IClickableMenu)new CustomBuildingsMenu();
                 }
-                else
+                else if(Game1.activeClickableMenu is CustomBuildingsMenu)
                 {
                     Game1.activeClickableMenu.exitThisMenu();
                 }
